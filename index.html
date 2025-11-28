@@ -233,38 +233,43 @@
         hungerFillEl.style.width = percent + "%";
     }
     function updateInventoryUI() {
-        inventoryEl.innerHTML = '';
-        // Convert inventory object into a sorted array for consistent slot placement
-        const sortedItems = Object.keys(player.inventory).sort().map(type => [type, player.inventory[type]]);
+  inventoryEl.innerHTML = '';
+  const sortedItems = Object.keys(player.inventory).sort().map(type => [type, player.inventory[type]]);
 
-        for (let i = 0; i < INVENTORY_SIZE; i++) {
-            const slot = document.createElement("div");
-            slot.className = "inv-slot";
-            slot.dataset.index = i;
+  for (let i = 0; i < INVENTORY_SIZE; i++) {
+    const slot = document.createElement("div");
+    slot.className = "inv-slot";
+    slot.dataset.index = i;
 
-            if (i < sortedItems.length) {
-                const [type, count] = sortedItems[i];
-                if (count > 0) {
-                    const icon = document.createElement("div");
-                    icon.className = `item-icon ${type}`;
-                    icon.style.backgroundColor = resourceConfig[type].color;
-                    slot.appendChild(icon);
-                    const countSpan = document.createElement("span");
-                    countSpan.className = "item-count";
-                    countSpan.textContent = count;
-                    slot.appendChild(countSpan);
-                    slot.dataset.type = type;
-                    
-                    // Add equipped styling if needed
-                    const itemConfig = resourceConfig[type];
-                    if (itemConfig && itemConfig.equip && player.equipped[itemConfig.equip] === type) {
-                        slot.classList.add('equipped');
-                    }
-                }
-            }
-            inventoryEl.appendChild(slot);
+    if (i < sortedItems.length) {
+      const [type, count] = sortedItems[i];
+      if (count > 0) {
+        const icon = document.createElement("div");
+        icon.className = `item-icon ${type}`;
+        icon.style.backgroundColor = resourceConfig[type].color;
+
+        // 🔑 Add hover text
+        icon.title = type; // shows "w-pickaxe", "w-sword", etc.
+        slot.title = type; // also works if you hover anywhere in the slot
+
+        slot.appendChild(icon);
+
+        const countSpan = document.createElement("span");
+        countSpan.className = "item-count";
+        countSpan.textContent = count;
+        slot.appendChild(countSpan);
+
+        slot.dataset.type = type;
+
+        const itemConfig = resourceConfig[type];
+        if (itemConfig && itemConfig.equip && player.equipped[itemConfig.equip] === type) {
+          slot.classList.add('equipped');
         }
+      }
     }
+    inventoryEl.appendChild(slot);
+  }
+}
 
     function updateCraftingUI() {
         craftingAreaEl.innerHTML = '';
