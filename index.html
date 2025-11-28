@@ -22,7 +22,7 @@
       height: 400px;
       border: 2px solid white;
       overflow: hidden;
-      margin-bottom: 10px; /* Space between game and UI */
+      margin-bottom: 10px;
     }
 
     #box {
@@ -33,11 +33,11 @@
     }
 
     /* Obstacle styles */
-    .tree, .rock, .gold, .diamond {
+    .tree, .rock, .gold, .diamond, .berrybush {
       position: absolute;
       width: 40px;
       height: 40px;
-      box-sizing: border-box; /* Ensures border/padding is inside width/height */
+      box-sizing: border-box;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -48,6 +48,7 @@
     .rock { background-color: gray; }
     .gold { background-color: gold; }
     .diamond { background-color: cyan; }
+    .berrybush { background-color: darkred; border-radius: 50%; } /* Added berry bush style */
 
     /* UI Overlay */
     #uiContainer {
@@ -102,15 +103,18 @@
       height: 100%;
       background-color: rgba(255, 255, 255, 0.1);
       border: 1px solid white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       position: relative;
+      cursor: pointer; /* Make slots look clickable */
+    }
+    
+    .inv-slot:hover {
+        background-color: rgba(255, 255, 255, 0.3);
     }
 
     .item-icon {
         width: 80%;
         height: 80%;
+        margin: 10% auto;
     }
 
     .item-count {
@@ -144,7 +148,6 @@
 
   <script>
     const gameArea = document.getElementById("gameArea");
-    const box = document.getElementById("box");
     const inventoryEl = document.getElementById("inventory");
     const hpFillEl = document.getElementById("hp-fill");
     const hpValueEl = document.getElementById("hp-value");
@@ -153,20 +156,27 @@
     const step = 20;
     const INVENTORY_SIZE = 9;
 
-    // Player State
     let boxX = 280;
     let boxY = 180;
     let roomX = 0;
     let roomY = 0;
     const rooms = {};
 
-    // Player Stats
     const player = {
         hp: 100,
         maxHp: 100,
         hunger: 100,
         maxHunger: 100,
-        inventory: {} // {type: count, ...}
+        inventory: {}
+    };
+
+    // --- Resource Definitions (Added berrybush) ---
+    const resourceConfig = {
+      tree: { max: 30, regen: 5000, color: 'green', type: 'material' },
+      rock: { max: 20, regen: 10000, color: 'gray', type: 'material' },
+      gold: { max: 10, regen: 20000, color: 'gold', type: 'material' },
+      diamond: { max: 10, regen: 20000, color: 'cyan', type: 'material' },
+      berrybush: { max: 6, regen: 8000, color: 'darkred', type: 'food', foodValue: 10 } // Berries regen every 8 seconds
     };
 
     // --- UI Update Functions ---
@@ -174,10 +184,7 @@
         hpValueEl.textContent = player.hp;
         const percent = (player.hp / player.maxHp) * 100;
         hpFillEl.style.width = percent + "%";
-        if (player.hp <= 0) {
-            alert("You died!");
-            // Add game over logic here
-        }
+        if (player.hp <= 0) alert("You died!");
     }
 
     function updateHungerUI() {
@@ -187,38 +194,68 @@
     }
 
     function updateInventoryUI() {
-        inventoryEl.innerHTML = ''; // Clear existing slots
+        inventoryEl.innerHTML = '';
+        const items = Object.entries(player.inventory);
         for (let i = 0; i < INVENTORY_SIZE; i++) {
             const slot = document.createElement("div");
             slot.className = "inv-slot";
+            // Store the index for click handling later
+            slot.dataset.index = i;
 
-            // Find an item that belongs in this conceptual slot index
-            // A simple object map isn't indexed easily, so we iterate
-            const items = Object.entries(player.inventory);
             if (i < items.length) {
                 const [type, count] = items[i];
                 if (count > 0) {
                     const icon = document.createElement("div");
                     icon.className = `item-icon ${type}`;
+                    icon.style.backgroundColor = resourceConfig[type].color; // Use color for icon
                     slot.appendChild(icon);
                     
                     const countSpan = document.createElement("span");
                     countSpan.className = "item-count";
                     countSpan.textContent = count;
                     slot.appendChild(countSpan);
+                    // Store the type for click handling
+                    slot.dataset.type = type;
                 }
             }
             inventoryEl.appendChild(slot);
         }
     }
 
-    // --- Resource Management ---
-    const resourceConfig = {
-      tree: { max: 30, regen: 5000, color: 'green' },
-      rock: { max: 20, regen: 10000, color: 'gray' },
-      gold: { max: 10, regen: 20000, color: 'gold' },
-      diamond: { max: 10, regen: 20000, color: 'cyan' }
-    };
+    // --- Interaction Logic ---
+
+    // Eating Mechanic
+    function eatItem(itemType) {
+        const config = resourceConfig[itemType];
+        if (config && config.type === 'food' && player.inventory[itemType] > 0) {
+            player.inventory[itemType]--;
+            player.hunger += config.foodValue;
+            if (player.hunger > player.maxHunger) player.hunger = player.maxHunger;
+            
+            // Remove item from inventory object if count reaches zero
+            if (player.inventory[itemType] <= 0) {
+                delete player.inventory[itemType];
+            }
+
+            updateHungerUI();
+            updateInventoryUI();
+            console.log(`Ate 1 ${itemType}. Hunger is now ${player.hunger}`);
+        } else if (config.type === 'material') {
+            console.log(`Can't eat ${itemType}! It's just a material.`);
+        }
+    }
+
+    // Add click listener to the *parent* inventory container (Event Delegation)
+    inventoryEl.addEventListener('click', (event) => {
+        // Find the slot element that was clicked, or is a parent of what was clicked
+        const clickedSlot = event.target.closest('.inv-slot');
+        if (clickedSlot && clickedSlot.dataset.type) {
+            eatItem(clickedSlot.dataset.type);
+        }
+    });
+
+
+    // --- Game World Generation/Persistence ---
 
     function collectResource(type, amount) {
         if (player.inventory[type]) {
@@ -230,6 +267,8 @@
     }
 
     function place(type, count, obstacles) {
+      const cfg = resourceConfig[type];
+
       for (let i = 0; i < count; i++) {
         const obs = document.createElement("div");
         obs.className = type;
@@ -237,7 +276,8 @@
         obs.style.top = Math.floor(Math.random() * (gameArea.offsetHeight - 40)) + "px";
 
         obs.dataset.type = type;
-        obs.dataset.amount = resourceConfig[type].max;
+        obs.dataset.amount = cfg.max;
+        obs.style.backgroundColor = cfg.color; // Ensure visual matches the type
         
         obstacles.push(obs);
       }
@@ -248,19 +288,24 @@
       if (rooms[key]) return rooms[key];
 
       const roomData = { obstacles: [], intervals: [] };
+      // Generate standard resources
       place("tree", Math.floor(Math.random() * 3) + 2, roomData.obstacles);
       place("rock", Math.floor(Math.random() * 2) + 1, roomData.obstacles);
       if (Math.random() < 0.25) place("gold", 1, roomData.obstacles);
       if (Math.random() < 0.05) place("diamond", 1, roomData.obstacles);
+      // Generate berry bushes
+      place("berrybush", Math.floor(Math.random() * 3) + 1, roomData.obstacles); // 1-3 bushes per room
 
       rooms[key] = roomData;
       return roomData;
     }
+    
+    // ... clearRoom, loadRoom, canMove functions are the same as before ...
+    // (They use the updated resourceConfig reference)
 
     function clearRoom() {
       const key = `${roomX},${roomY}`;
       const currentRoomData = rooms[key];
-
       if (currentRoomData) {
           currentRoomData.obstacles.forEach(child => {
               if (child.parentNode === gameArea) gameArea.removeChild(child);
@@ -272,15 +317,14 @@
 
     function loadRoom(rx, ry) {
       const roomData = generateRoom(rx, ry);
-
       roomData.obstacles.forEach(obs => {
         gameArea.appendChild(obs);
-
         const cfg = resourceConfig[obs.dataset.type];
         const intervalId = setInterval(() => {
           let amt = parseInt(obs.dataset.amount);
           if (amt < cfg.max) {
             obs.dataset.amount = amt + 1;
+            // obs.textContent = obs.dataset.amount; // Optional: Show count on bush
           }
         }, cfg.regen);
         roomData.intervals.push(intervalId);
@@ -297,47 +341,43 @@
         const oy = rect.top - areaRect.top;
         const ow = rect.width;
         const oh = rect.height;
-        if (boxRect.x < ox + ow &&
-            boxRect.x + boxRect.w > ox &&
-            boxRect.y < oy + oh &&
-            boxRect.y + boxRect.h > oy) {
+        if (boxRect.x < ox + ow && boxRect.x + boxRect.w > ox && boxRect.y < oy + oh && boxRect.y + boxRect.h > oy) {
           return false;
         }
       }
       return true;
     }
 
+
     // --- Core Game Loops and Handlers ---
 
     // Initial setup
     loadRoom(roomX, roomY);
-    box.style.left = boxX + "px";
-    box.style.top = boxY + "px";
+    // ... initial UI updates ...
     updateHPUI();
     updateHungerUI();
     updateInventoryUI();
 
 
-    // Hunger/HP loop (Main survival mechanics)
-    // Hunger depletes every 45 seconds
+    // Hunger depletion loop (45 seconds)
     setInterval(() => {
         if (player.hunger > 0) {
-            player.hunger -= 10; // Deplete hunger value
+            player.hunger -= 10;
             if (player.hunger < 0) player.hunger = 0;
             updateHungerUI();
         }
-    }, 45000); // 45 seconds
+    }, 45000);
 
-    // Damage loop (deals damage every 3 seconds if starving)
+    // Damage loop (3 seconds if starving)
     setInterval(() => {
-        if (player.hunger === 0) {
-            player.hp -= 10; // Lose 10 HP
+        if (player.hunger === 0 && player.hp > 0) {
+            player.hp -= 10;
             updateHPUI();
         }
-    }, 3000); // 3 seconds per tick
+    }, 3000);
 
 
-    // Movement and Room Change Handler
+    // Movement and Room Change Handler (Same as before)
     document.addEventListener("keydown", (event) => {
       let newX = boxX;
       let newY = boxY;
@@ -347,9 +387,8 @@
       else if (event.key === "ArrowDown") newY += step;
       else if (event.key === "ArrowLeft") newX -= step;
       else if (event.key === "ArrowRight") newX += step;
-      else if (event.code !== "Space") return; // Only process arrow keys and space
+      else if (event.code !== "Space") return;
 
-      // Check if off screen
       if (newX < 0) { clearRoom(); roomX--; newX = gameArea.offsetWidth - 40; roomChanged = true; }
       else if (newX > gameArea.offsetWidth - 40) { clearRoom(); roomX++; newX = 0; roomChanged = true; }
       else if (newY < 0) { clearRoom(); roomY--; newY = gameArea.offsetHeight - 40; roomChanged = true; }
@@ -365,7 +404,7 @@
       }
     });
     
-    // Punch Mechanic Handler
+    // Punch Mechanic Handler (Now collects berries too)
     document.addEventListener("keydown", (event) => {
       if (event.code === "Space") {
         const obstacles = rooms[`${roomX},${roomY}`].obstacles || [];
@@ -380,7 +419,6 @@
           const dx = Math.abs(boxX - ox);
           const dy = Math.abs(boxY - oy);
 
-          // Check proximity (within 50px)
           if (dx < 50 && dy < 50) { 
             let amt = parseInt(obs.dataset.amount);
             if (amt > 0) {
