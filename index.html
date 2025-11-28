@@ -204,7 +204,8 @@
         equipped: {
             pickaxe: null,
             helmet: null,
-            sword: null
+            sword: null,
+            backpackUpgrade: false
         }
     };
 
@@ -263,6 +264,7 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
         'stone-helm': { costs: { tree: 30, rock: 75 }, requiresTable: true },
         'gold-axe': { costs: { tree: 50, gold: 40 }, requiresTable: true },
         'diamond-axe': { costs: { tree: 60, diamond: 50 }, requiresTable: true },
+        'backpack': { costs: { fur: 5 }, requiresTable: true },
         'plot': { costs: { tree: 20, dirt: 60 }, requiresTable: true },
         'bread': { costs: { wheat: 3 }, requiresFurnace: true },
         'cooked-meat': { costs: { meat: 1 }, requiresFurnace: true },
@@ -284,7 +286,7 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
   inventoryEl.innerHTML = '';
   const sortedItems = Object.keys(player.inventory).sort().map(type => [type, player.inventory[type]]);
 
-  for (let i = 0; i < INVENTORY_SIZE; i++) {
+  for (let i = 0; i < getInventorySize(); i++) {
     const slot = document.createElement("div");
     slot.className = "inv-slot";
     slot.dataset.index = i;
@@ -309,6 +311,8 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
 
         slot.dataset.type = type;
 
+        const visibleSize = backpackVisible ? getInventorySize() : INVENTORY_SIZE;
+
         const itemConfig = resourceConfig[type];
         if (itemConfig && itemConfig.equip && player.equipped[itemConfig.equip] === type) {
           slot.classList.add('equipped');
@@ -317,6 +321,9 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
     }
     inventoryEl.appendChild(slot);
   }
+}
+    function getInventorySize() {
+  return INVENTORY_SIZE + (player.backpackUpgrade ? 4 : 0);
 }
 
     function updateCraftingUI() {
@@ -386,35 +393,53 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
         // Update UI to reflect changes (highlighting equipped slots)
         updateInventoryUI();
     }
+    
+    let backpackVisible = false;
+
+document.addEventListener("keydown", (event) => {
+  if (event.code === "KeyI" && player.backpackUpgrade) {
+    backpackVisible = !backpackVisible;
+    updateInventoryUI();
+  }
+});
+
 
     function craftItem(itemType) {
-        const recipe = recipes[itemType];
-        if (!recipe) return;
+  const recipe = recipes[itemType];
+  if (!recipe) return;
 
-        // Verify costs again
-        for (const resource in recipe.costs) {
-            if (!player.inventory[resource] || player.inventory[resource] < recipe.costs[resource]) {
-                console.log("Cannot craft, missing resources.");
-                return;
-            }
-        }
+  // Verify costs
+  for (const resource in recipe.costs) {
+    if (!player.inventory[resource] || player.inventory[resource] < recipe.costs[resource]) {
+      console.log("Cannot craft, missing resources.");
+      return;
+    }
+  }
 
-        // Deduct costs
-        for (const resource in recipe.costs) {
-            player.inventory[resource] -= recipe.costs[resource];
-            if (player.inventory[resource] <= 0) delete player.inventory[resource];
-        }
+  // Deduct costs
+  for (const resource in recipe.costs) {
+    player.inventory[resource] -= recipe.costs[resource];
+    if (player.inventory[resource] <= 0) delete player.inventory[resource];
+  }
 
-        // Give crafted item
-        if (itemType === 'furnace') {
-  placeFurnace(itemType);
-} else if (itemType === 'plot') {
-  placePlot();
-} else if (resourceConfig[itemType].type === 'placeable') {
-  placeCraftingTable(itemType);
-} else {
-  collectResource(itemType, 1);
+  // Special case: backpack upgrade
+  if (itemType === 'backpack') {
+    player.backpackUpgrade = true;
+    console.log("Backpack crafted! Inventory expanded by 4 slots.");
+  } else if (itemType === 'furnace') {
+    placeFurnace(itemType);
+  } else if (itemType === 'plot') {
+    placePlot();
+  } else if (resourceConfig[itemType].type === 'placeable') {
+    placeCraftingTable(itemType);
+  } else {
+    collectResource(itemType, 1);
+  }
+
+  updateInventoryUI();
+  updateCraftingUI();
 }
+
 
 
 
@@ -517,7 +542,7 @@ function placeFurnace(type) {
   } else {
     // Count unique items
     const uniqueCount = Object.keys(player.inventory).length;
-    if (uniqueCount >= INVENTORY_SIZE) {
+    if (uniqueCount >= getInventorySize()) {
       console.log("Inventory full! Cannot collect " + type);
       return; // Do not add new resource
     }
