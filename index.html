@@ -243,7 +243,7 @@
   for (const itemName in recipes) {
     const recipe = recipes[itemName];
 
-    // If recipe requires a table but none nearby, skip
+    // Skip if recipe requires table but none nearby
     if (recipe.requiresTable && !nearbyTable) continue;
 
     // Check if player meets crafting requirements
@@ -255,29 +255,33 @@
       }
     }
 
+    // Build craft option UI
+    const craftOption = document.createElement("div");
+    craftOption.className = "craft-option";
+    craftOption.dataset.type = itemName;
+
+    // Icon
+    const icon = document.createElement("div");
+    icon.className = "craft-icon";
+    icon.style.backgroundColor = resourceConfig[itemName].color;
+    craftOption.appendChild(icon);
+
+    // Label
+    const label = document.createElement("span");
+    label.textContent = itemName;
+    craftOption.appendChild(label);
+
+    // Enable click only if craftable
     if (canCraft) {
-      // Build craft option UI
-      const craftOption = document.createElement("div");
-      craftOption.className = "craft-option";
-      craftOption.dataset.type = itemName;
       craftOption.addEventListener('click', () => craftItem(itemName));
-
-      // Icon
-      const icon = document.createElement("div");
-      icon.className = "craft-icon";
-      icon.style.backgroundColor = resourceConfig[itemName].color;
-      craftOption.appendChild(icon);
-
-      // Label
-      const label = document.createElement("span");
-      label.textContent = itemName;
-      craftOption.appendChild(label);
-
-      // Append to crafting area
-      craftingAreaEl.appendChild(craftOption);
+    } else {
+      craftOption.style.opacity = "0.5"; // visually disabled
     }
+
+    craftingAreaEl.appendChild(craftOption);
   }
 }
+
 
 
     // --- Interaction Logic ---
@@ -331,18 +335,21 @@
   updateCraftingUI();
 }
 
+
     
     function placeCraftingTable(type) {
   const currentRoomData = rooms[`${roomX},${roomY}`];
   const newTable = document.createElement("div");
   newTable.className = type;
   newTable.dataset.type = type;
-  newTable.dataset.amount = 1; // permanent, doesn’t regenerate
+  newTable.dataset.amount = 1; // permanent
   newTable.style.left = (boxX + GRID_SIZE) + "px"; 
   newTable.style.top = boxY + "px";
+
   currentRoomData.obstacles.push(newTable);
   gameArea.appendChild(newTable);
 }
+
 
     
     function isNearCraftingTable() {
