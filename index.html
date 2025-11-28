@@ -775,28 +775,26 @@ function placeFirePit() {
     updateInventoryUI();
     updateCraftingUI();
     updateCoordDisplay();
-    startDayNightCycle();
     let isDay = true;
 let cycleTimer = 0;
 
 function startDayNightCycle() {
   updateDayNightUI();
+
   setInterval(() => {
     cycleTimer++;
-    if (isDay && cycleTimer >= 40) {
-      // 40 ticks * 3s = 120s
+
+    if (isDay && cycleTimer >= 40) { // 40 ticks * 3s = 120s
       isDay = false;
       cycleTimer = 0;
       updateDayNightUI();
-    } else if (!isDay && cycleTimer >= 20) {
-      // 20 ticks * 3s = 60s
+    } else if (!isDay && cycleTimer >= 20) { // 20 ticks * 3s = 60s
       isDay = true;
       cycleTimer = 0;
       updateDayNightUI();
     }
   }, 3000); // tick every 3 seconds
 }
-
 
 
 function updateDayNightUI() {
