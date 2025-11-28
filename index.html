@@ -559,13 +559,20 @@ function placeFirePit() {
     }
   });
 
-  // burn loop
   setInterval(() => {
-    if (pit.dataset.fuel > 0) {
-      pit.dataset.fuel--;
+  if (pit.dataset.fuel > 0) {
+    pit.dataset.fuel--;
+    
+    if (!pit.classList.contains('lit')) {
+      pit.classList.add('lit');
     }
-  }, 3000); 
-}
+  } else {
+    if (pit.classList.contains('lit')) {
+      pit.classList.remove('lit');
+    }
+  }
+}, 3000);
+
 
 
     
