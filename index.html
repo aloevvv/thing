@@ -786,7 +786,7 @@ document.addEventListener("keydown", (event) => {
 
         const checkProximity = (ent) => {
             const ox = parseInt(ent.style.left); const oy = parseInt(ent.style.top);
-            return Math.abs(boxX - ox) < 100 && Math.abs(boxY - oy) < 100;
+            return Math.abs(boxX - ox) < 70 && Math.abs(boxY - oy) < 70;
         };
 
         let hitSomething = false;
