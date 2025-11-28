@@ -771,7 +771,7 @@ function updateDayNightUI() {
 
 
 setInterval(() => {
-  let loss = isDay ? 5 : 30; // lose 5 in day, 30 in night
+  let loss = isDay ? 2 : 30;
   if (!nearFirePit()) {
     player.temp -= loss;
   } else {
