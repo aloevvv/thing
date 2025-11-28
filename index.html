@@ -14,6 +14,7 @@
       align-items: center;
       color: white;
       font-family: sans-serif;
+      transition: background-color 2s ease-in-out;
     }
 
     #gameArea {
@@ -77,6 +78,14 @@
   height: 40px;
   background-color: #444;    
   border: 2px solid #222;      
+  box-sizing: border-box;
+}
+    .firepit {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background-color: #361919;    
+  border: 2px solid #000000;      
   box-sizing: border-box;
 }
 
@@ -168,6 +177,10 @@
         <div id="hunger-fill" class="status-bar-fill"></div>
         <div class="status-bar-label">HUNGER: <span id="hunger-value">100</span></div>
     </div>
+    <div class="status-bar-container">
+  <div id="temp-fill" class="status-bar-fill"></div>
+  <div class="status-bar-label">TEMPERATURE: <span id="temp-value">100</span></div>
+</div>
     <div id="inventory"></div>
   </div>
 
@@ -196,18 +209,21 @@
     let lastHitTime = 0;
 
     const player = {
-        hp: 100,
-        maxHp: 100,
-        hunger: 100,
-        maxHunger: 100,
-        inventory: {},
-        equipped: {
-            pickaxe: null,
-            helmet: null,
-            sword: null,
-            backpackUpgrade: false
-        }
-    };
+  hp: 100,
+  maxHp: 100,
+  hunger: 100,
+  maxHunger: 100,
+  temp: 100,      
+  maxTemp: 100,   
+  inventory: {},
+  equipped: {
+    pickaxe: null,
+    helmet: null,
+    sword: null,
+    backpackUpgrade: false
+  }
+};
+
 
     const resourceConfig = {
   tree: { max: 30, regen: 5000, color: 'green', type: 'material' },
@@ -223,6 +239,8 @@
     resourceConfig['w-helm'] = { color: '#8b4513', type: 'armor', equip: 'helmet', defense: 1 };
     resourceConfig['w-sword'] = { color: '#8b4513', type: 'weapon', equip: 'sword', damageBoost: 5 };
     resourceConfig['w-pickaxe'] = { color: '#8b4513', type: 'tool', equip: 'pickaxe', harvestLevel: 1 };
+    resourceConfig['furnace'] = { color: '#444', type: 'placeable' };
+    resourceConfig['firepit'] = { color: '#444', type: 'placeable' };
     resourceConfig['stone-axe'] = { color: '#7f7f7f', type: 'tool', equip: 'pickaxe', harvestLevel: 2 };
     resourceConfig['stone-sword'] = { color: '#7f7f7f', type: 'weapon', equip: 'sword', damageBoost: 10 };
     resourceConfig['stone-helm'] = { color: '#7f7f7f', type: 'armor', equip: 'helmet', defense: 2 };
@@ -240,7 +258,6 @@ resourceConfig['dirt'] = { color: '#794f4f', type: 'material' };
 resourceConfig['wheat'] = { color: 'goldenrod', type: 'material' };
 resourceConfig['backpack'] = { color: '#853c16', type: 'material' };
 resourceConfig['plot'] = { color: '#654321', type: 'placeable' };
-resourceConfig['furnace'] = { color: '#444', type: 'placeable' };
 resourceConfig['bread'] = { color: '#bc7f2e', type: 'food', foodValue: 30 };
 resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 };
 
@@ -259,6 +276,7 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
         'w-sword': { costs: { tree: 35 }, requiresTable: false },
         'craftingtable': { costs: { tree: 30 }, requiresTable: false },
         'furnace': { costs: { rock: 45 }, requiresTable: true },
+        'firepit': { costs: { tree: 60, rock: 30 }, requiresTable: true },
         'stone-axe': { costs: { tree: 40, rock: 30 }, requiresTable: true },
         'shovel': { costs: { tree: 30, rock: 30 }, requiresTable: true },
         'stone-sword': { costs: { tree: 50, rock: 40 }, requiresTable: true },
@@ -431,6 +449,8 @@ document.addEventListener("keydown", (event) => {
     placeFurnace(itemType);
   } else if (itemType === 'plot') {
     placePlot();
+  } else if (itemType === 'firepit') {
+    placeFirePit();
   } else if (resourceConfig[itemType].type === 'placeable') {
     placeCraftingTable(itemType);
   } else {
@@ -479,6 +499,33 @@ function placeFurnace(type) {
   currentRoomData.obstacles.push(furnace);
   gameArea.appendChild(furnace);
 }
+function placeFirePit() {
+  const currentRoomData = rooms[`${roomX},${roomY}`];
+  const pit = document.createElement("div");
+  pit.className = "firepit";
+  pit.dataset.type = "firepit";
+  pit.dataset.fuel = 0; // how many ticks left
+  pit.style.left = (boxX + GRID_SIZE) + "px";
+  pit.style.top = boxY + "px";
+  currentRoomData.obstacles.push(pit);
+  gameArea.appendChild(pit);
+
+  pit.addEventListener("click", () => {
+    const treesToUse = parseInt(prompt("How many trees to fuel the pit?"), 10);
+    if (player.inventory['tree'] >= treesToUse) {
+      player.inventory['tree'] -= treesToUse;
+      pit.dataset.fuel = parseInt(pit.dataset.fuel) + treesToUse;
+      updateInventoryUI();
+    }
+  });
+
+  // burn loop
+  setInterval(() => {
+    if (pit.dataset.fuel > 0) {
+      pit.dataset.fuel--;
+    }
+  }, 3000); // each tree = 1 tick
+}
 
     
     function isNearCraftingTable() {
@@ -512,6 +559,20 @@ function placeFurnace(type) {
   }
   return false;
 }
+    function nearFirePit() {
+  const obstacles = rooms[`${roomX},${roomY}`].obstacles || [];
+  for (const obs of obstacles) {
+    if (obs.dataset.type === "firepit" && parseInt(obs.dataset.fuel) > 0) {
+      const ox = parseInt(obs.style.left);
+      const oy = parseInt(obs.style.top);
+      if (Math.abs(boxX - ox) < GRID_SIZE * 2 && Math.abs(boxY - oy) < GRID_SIZE * 2) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
     function eatItem(itemType) {
         const config = resourceConfig[itemType];
         if (config && config.type === 'food' && player.inventory[itemType] > 0) {
@@ -673,6 +734,58 @@ function placeFurnace(type) {
     updateInventoryUI();
     updateCraftingUI();
     updateCoordDisplay();
+    let isDay = true;   // start daytime
+    let dayNightInterval;
+
+// cycle: 2 min day → 1 min night
+function startDayNightCycle() {
+  isDay = true;
+  updateDayNightUI();
+
+  dayNightInterval = setInterval(() => {
+    if (isDay) {
+      isDay = false;
+      setTimeout(() => {
+        isDay = true;
+        updateDayNightUI();
+      }, 60000); // 1 min night
+    } else {
+      isDay = true;
+      setTimeout(() => {
+        isDay = false;
+        updateDayNightUI();
+      }, 120000); // 2 min day
+    }
+    updateDayNightUI();
+  }, 180000); // full cycle length
+}
+
+function updateDayNightUI() {
+  document.body.style.backgroundColor = isDay ? "darkgreen" : "darkblue";
+}
+    function updateTempUI() {
+  document.getElementById("temp-value").textContent = player.temp;
+  const percent = (player.temp / player.maxTemp) * 100;
+  document.getElementById("temp-fill").style.width = percent + "%";
+}
+
+
+setInterval(() => {
+  let loss = isDay ? 5 : 30; // lose 5 in day, 30 in night
+  if (!nearFirePit()) {
+    player.temp -= loss;
+  } else {
+    player.temp += 20; // gain temp near fire pit
+    if (player.temp > player.maxTemp) player.temp = player.maxTemp;
+  }
+
+  if (player.temp <= 0) {
+    damagePlayer(10); // freeze damage
+    player.temp = 0;
+  }
+
+  updateTempUI();
+}, 3000); // tick every 3 sec
 
 
     // Hunger depletion loop (45 seconds) and Damage/Regen loop (3 seconds)
