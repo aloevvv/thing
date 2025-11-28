@@ -199,6 +199,8 @@
     resourceConfig['w-sword'] = { color: '#8b4513', type: 'weapon', equip: 'sword', damageBoost: 5 };
     resourceConfig['w-pickaxe'] = { color: '#8b4513', type: 'tool', equip: 'pickaxe', harvestLevel: 1 };
     resourceConfig['stone-axe'] = { color: '#7f7f7f', type: 'tool', equip: 'pickaxe', harvestLevel: 2 };
+    resourceConfig['stone-sword'] = { color: '#7f7f7f', type: 'weapon', equip: 'sword', damageBoost: 10 };
+    resourceConfig['stone-helm'] = { color: '#7f7f7f', type: 'armor', equip: 'helmet', defense: 2 };
     resourceConfig['gold-axe'] = { color: 'gold', type: 'tool', equip: 'pickaxe', harvestLevel: 3 };
     resourceConfig['diamond-axe'] = { color: 'cyan', type: 'tool', equip: 'pickaxe', harvestLevel: 4 };
     resourceConfig['craftingtable'] = { color: '#8b4513', type: 'placeable' };
@@ -216,6 +218,8 @@
         'w-sword': { costs: { tree: 35 }, requiresTable: false },
         'craftingtable': { costs: { tree: 30 }, requiresTable: false },
         'stone-axe': { costs: { tree: 40, rock: 30 }, requiresTable: true },
+        'stone-sword': { costs: { tree: 50, rock: 40 }, requiresTable: true },
+        'stone-helm': { costs: { tree: 30, rock: 75 }, requiresTable: true },
         'gold-axe': { costs: { tree: 50, gold: 40 }, requiresTable: true },
         'diamond-axe': { costs: { tree: 60, diamond: 50 }, requiresTable: true }
     };
