@@ -137,21 +137,27 @@
   </div>
 
   <script>
+        // --- DOM ELEMENT REFERENCES ---
     const gameArea = document.getElementById("gameArea");
     const box = document.getElementById("box");
     const inventoryEl = document.getElementById("inventory");
     const craftingAreaEl = document.getElementById("craftingArea");
-    // ... stat bar elements ...
-
-    const step = 20;
-    const INVENTORY_SIZE = 9;
+    const gameLogEl = document.getElementById("gameLog");
+    const hpFillEl = document.getElementById("hp-fill");
+    const hpValueEl = document.getElementById("hp-value"); 
+    const hungerFillEl = document.getElementById("hunger-fill");
+    const hungerValueEl = document.getElementById("hunger-value");
+    
+    // --- CONFIGS AND STATE (Same as before) ---
+    const step = 20; 
+    const INVENTORY_SIZE = 9; 
     const GRID_SIZE = 40;
 
-    let boxX = 280;
-    let boxY = 180;
-    let roomX = 0;
-    let roomY = 0;
-    const rooms = {};
+    let boxX = 280; 
+    let boxY = 180; 
+    let roomX = 0; 
+    let roomY = 0; 
+    const rooms = {}; 
     let lastHitTime = 0;
 
     const player = {
