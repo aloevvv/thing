@@ -56,6 +56,22 @@
     .diamond { background-color: cyan; }
     .berrybush { background-color: darkred; border-radius: 50%; }
     .craftingtable { background-color: #8b4513; border: 2px solid #5c2e0d; } /* Brown table */
+    .plot {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background-color: #654321; /* brown dirt */
+  border: 2px solid #3e2a14; /* darker outline */
+  box-sizing: border-box;
+  z-index: 1; /* keep it below player */
+}
+.plot.planted {
+  background-color: darkgreen; /* planted state */
+}
+.plot.ready {
+  background-color: yellowgreen; /* ready to harvest */
+}
+
 
     /* Enemy styles */
     .enemy {
@@ -550,20 +566,23 @@ resourceConfig['plot'] = { color: '#654321', type: 'placeable' };
     }
 
 
-    function checkObstacleCollision(x, y, obstacles) { /* ... same as before ... */
-        const rect1 = {x, y, w: GRID_SIZE, h: GRID_SIZE};
-        for (const item of obstacles) {
-            if (item.parentNode === gameArea) {
-                const ox = parseInt(item.style.left);
-                const oy = parseInt(item.style.top);
-                const rect2 = {x: ox, y: oy, w: GRID_SIZE, h: GRID_SIZE};
-                if (rect1.x < rect2.x + rect2.w && rect1.x + rect1.w > rect2.x && rect1.y < rect2.y + rect2.h && rect1.y + rect1.h > rect2.y) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    function checkObstacleCollision(x, y, obstacles) {
+  const rect1 = {x, y, w: GRID_SIZE, h: GRID_SIZE};
+  for (const item of obstacles) {
+    if (item.parentNode === gameArea) {
+      if (item.dataset.type === "plot") continue; // plots are walkable
+      const ox = parseInt(item.style.left);
+      const oy = parseInt(item.style.top);
+      const rect2 = {x: ox, y: oy, w: GRID_SIZE, h: GRID_SIZE};
+      if (rect1.x < rect2.x + rect2.w && rect1.x + rect1.w > rect2.x &&
+          rect1.y < rect2.y + rect2.h && rect1.y + rect1.h > rect2.y) {
+        return true;
+      }
     }
+  }
+  return false;
+}
+
     
     function updateCoordDisplay() {
   document.getElementById("coordDisplay").textContent = `${roomX},${roomY}`;
@@ -730,25 +749,27 @@ document.addEventListener("keydown", (event) => {
       if (obs.dataset.type === "plot") {
         const ox = parseInt(obs.style.left);
         const oy = parseInt(obs.style.top);
+
+        // check proximity: player must be standing on/near the plot
         if (Math.abs(boxX - ox) < GRID_SIZE && Math.abs(boxY - oy) < GRID_SIZE) {
+
+  
           if (obs.dataset.state === "empty" && player.inventory['wheat-seed'] > 0) {
             player.inventory['wheat-seed']--;
             obs.dataset.state = "planted";
-            obs.style.backgroundColor = "darkgreen"; // visual indicator
-            updateInventoryUI();
-
-            // After 80 seconds, make it ready
+            obs.classList.add("planted");
             setTimeout(() => {
               obs.dataset.state = "ready";
-              obs.style.backgroundColor = "yellowgreen";
+              obs.classList.remove("planted");
+              obs.classList.add("ready");
             }, 80000);
           } else if (obs.dataset.state === "ready") {
-            // Harvest
             collectResource('wheat', 1);
             collectResource('wheat-seed', 1);
             obs.dataset.state = "empty";
-            obs.style.backgroundColor = "#654321";
+            obs.classList.remove("ready");
           }
+
         }
       }
     }
