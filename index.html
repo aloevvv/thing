@@ -543,33 +543,57 @@ function placeFirePit() {
   const pit = document.createElement("div");
   pit.className = "firepit";
   pit.dataset.type = "firepit";
-  pit.dataset.fuel = 0; // how many ticks left
+  pit.dataset.fuel = 0; // start empty
   pit.style.left = (boxX + GRID_SIZE) + "px";
   pit.style.top = boxY + "px";
   currentRoomData.obstacles.push(pit);
   gameArea.appendChild(pit);
 
- 
+  // 🔥 Click to fuel the pit
   pit.addEventListener("click", () => {
-    const treesToUse = parseInt(prompt("How many trees to fuel the pit?"), 10);
-    if (player.inventory['tree'] >= treesToUse) {
-      player.inventory['tree'] -= treesToUse;
-      pit.dataset.fuel = parseInt(pit.dataset.fuel) + treesToUse;
-      updateInventoryUI();
+    if (!player.inventory['tree'] || player.inventory['tree'] <= 0) {
+      alert("You have no wood to fuel the fire pit!");
+      return;
     }
+
+    const treesToUse = parseInt(prompt("How many trees to add?"), 10);
+    if (isNaN(treesToUse) || treesToUse <= 0) return;
+
+    if (player.inventory['tree'] < treesToUse) {
+      alert("Not enough wood!");
+      return;
+    }
+
+    // Deduct from inventory
+    player.inventory['tree'] -= treesToUse;
+    if (player.inventory['tree'] <= 0) delete player.inventory['tree'];
+
+    // Add to pit fuel
+    pit.dataset.fuel = parseInt(pit.dataset.fuel) + treesToUse;
+
+    // 🔴 Turn pit red if lit
+    if (parseInt(pit.dataset.fuel) > 0) {
+      pit.style.backgroundColor = "red";
+      pit.style.boxShadow = "0 0 10px red"; // glow effect
+    }
+
+    updateInventoryUI();
   });
 
+ 
   setInterval(() => {
     let fuel = parseInt(pit.dataset.fuel);
     if (fuel > 0) {
       pit.dataset.fuel = fuel - 1;
       if (pit.dataset.fuel <= 0) {
+        // back to unlit state
         pit.style.backgroundColor = "#361919";
         pit.style.boxShadow = "none";
       }
     }
-  }, 3000);
+  }, 3000); // each tree = 1 tick
 }
+
 
 
 
