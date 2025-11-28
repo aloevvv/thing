@@ -708,7 +708,7 @@
 
         const checkProximity = (ent) => {
             const ox = parseInt(ent.style.left); const oy = parseInt(ent.style.top);
-            return Math.abs(boxX - ox) < 50 && Math.abs(boxY - oy) < 50;
+            return Math.abs(boxX - ox) < 100 && Math.abs(boxY - oy) < 100;
         };
 
         let hitSomething = false;
