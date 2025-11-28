@@ -442,23 +442,25 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
   const currentRoomData = rooms[`${roomX},${roomY}`];
   const plot = document.createElement("div");
   plot.className = "plot";
-  plot.dataset.type = "plot";
-  plot.dataset.state = "empty"; // empty, planted, ready
+  plot.dataset.type = "plot"; 
+  plot.dataset.state = "empty";
   plot.style.left = (boxX + GRID_SIZE) + "px";
   plot.style.top = boxY + "px";
   currentRoomData.obstacles.push(plot);
   gameArea.appendChild(plot);
 }
-    
+
 function placeFurnace(type) {
   const currentRoomData = rooms[`${roomX},${roomY}`];
-  const newFurnace = document.createElement("div");
-  newFurnace.className = type;
-  newFurnace.style.left = (boxX + GRID_SIZE) + "px"; 
-  newFurnace.style.top = boxY + "px";
-  currentRoomData.obstacles.push(newFurnace);
-  gameArea.appendChild(newFurnace);
+  const furnace = document.createElement("div");
+  furnace.className = type;
+  furnace.dataset.type = "furnace"; 
+  furnace.style.left = (boxX + GRID_SIZE) + "px";
+  furnace.style.top = boxY + "px";
+  currentRoomData.obstacles.push(furnace);
+  gameArea.appendChild(furnace);
 }
+
     
     function isNearCraftingTable() {
         const obstacles = rooms[`${roomX},${roomY}`].obstacles;
@@ -590,24 +592,29 @@ function placeFurnace(type) {
       }
     }
     function loadRoom(rx, ry) {
-      const roomData = generateRoom(rx, ry);
-      roomData.obstacles.forEach(obs => {
-        gameArea.appendChild(obs);
-        // Only start intervals for harvestable resources, not placed items like tables
-        if (obs.dataset.type !== 'craftingtable') { 
-            const cfg = resourceConfig[obs.dataset.type];
-            const intervalId = setInterval(() => {
-                let amt = parseInt(obs.dataset.amount);
-                if (amt < cfg.max) obs.dataset.amount = amt + 1;
-            }, cfg.regen);
-            roomData.intervals.push(intervalId);
-        }
-      });
-      roomData.enemies.forEach(enemy => {
-          if (enemy.dataset.hp > 0) { gameArea.appendChild(enemy); }
-      });
-      updateCraftingUI(); // Update crafting options when entering a new room (in case a table is nearby/far)
+  const roomData = generateRoom(rx, ry);
+  roomData.obstacles.forEach(obs => {
+    gameArea.appendChild(obs);
+
+    // Only start regen for harvestable resources
+    const type = obs.dataset.type;
+    if (type && resourceConfig[type] && resourceConfig[type].regen) {
+      const cfg = resourceConfig[type];
+      const intervalId = setInterval(() => {
+        let amt = parseInt(obs.dataset.amount);
+        if (amt < cfg.max) obs.dataset.amount = amt + 1;
+      }, cfg.regen);
+      roomData.intervals.push(intervalId);
     }
+  });
+
+  roomData.enemies.forEach(enemy => {
+    if (enemy.dataset.hp > 0) gameArea.appendChild(enemy);
+  });
+
+  updateCraftingUI();
+}
+
 
 
     function checkObstacleCollision(x, y, obstacles) {
