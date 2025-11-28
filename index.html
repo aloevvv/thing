@@ -204,6 +204,16 @@
     resourceConfig['gold-axe'] = { color: 'gold', type: 'tool', equip: 'pickaxe', harvestLevel: 3 };
     resourceConfig['diamond-axe'] = { color: 'cyan', type: 'tool', equip: 'pickaxe', harvestLevel: 4 };
     resourceConfig['craftingtable'] = { color: '#8b4513', type: 'placeable' };
+    resourceConfig['shovel'] = { 
+  color: '#a0522d', 
+  type: 'tool', 
+  equip: 'pickaxe',
+  harvestLevel: 0
+};
+resourceConfig['wheat-seed'] = { color: 'yellow', type: 'material' };
+resourceConfig['wheat'] = { color: 'goldenrod', type: 'material' };
+resourceConfig['plot'] = { color: '#654321', type: 'placeable' };
+
 
     const enemyConfig = {
         wolf: { hp: 200, damage: 10, speed: 30, range: 200, drops: { meat: 1 }, spawnChance: 0.10 },
@@ -218,10 +228,12 @@
         'w-sword': { costs: { tree: 35 }, requiresTable: false },
         'craftingtable': { costs: { tree: 30 }, requiresTable: false },
         'stone-axe': { costs: { tree: 40, rock: 30 }, requiresTable: true },
+        'shovel': { costs: { tree: 30, rock: 30 }, requiresTable: true },
         'stone-sword': { costs: { tree: 50, rock: 40 }, requiresTable: true },
         'stone-helm': { costs: { tree: 30, rock: 75 }, requiresTable: true },
         'gold-axe': { costs: { tree: 50, gold: 40 }, requiresTable: true },
-        'diamond-axe': { costs: { tree: 60, diamond: 50 }, requiresTable: true }
+        'diamond-axe': { costs: { tree: 60, diamond: 50 }, requiresTable: true },
+        'plot': { costs: { tree: 20, dirt: 60 }, requiresTable: true }
     };
 
     // --- UI Update Functions ---
@@ -360,13 +372,14 @@
         }
 
         // Give crafted item
-        if (resourceConfig[itemType].type === 'placeable') {
-            // Handle placing the crafting table in the world
-            placeCraftingTable(itemType);
-        } else {
-            // Add to inventory
-            collectResource(itemType, 1);
-        }
+        if (itemType === 'plot') {
+  placePlot();
+} else if (resourceConfig[itemType].type === 'placeable') {
+  placeCraftingTable(itemType);
+} else {
+  collectResource(itemType, 1);
+}
+
 
         // Update UIs (inventory changes, crafting menu might change)
         updateInventoryUI();
@@ -388,6 +401,18 @@
         gameArea.appendChild(newTable);
         // Note: placed objects currently don't have regen intervals/datasets, they are permanent once placed.
     }
+    function placePlot() {
+  const currentRoomData = rooms[`${roomX},${roomY}`];
+  const plot = document.createElement("div");
+  plot.className = "plot";
+  plot.dataset.type = "plot";
+  plot.dataset.state = "empty"; // empty, planted, ready
+  plot.style.left = (boxX + GRID_SIZE) + "px";
+  plot.style.top = boxY + "px";
+  currentRoomData.obstacles.push(plot);
+  gameArea.appendChild(plot);
+}
+
     
     function isNearCraftingTable() {
         const obstacles = rooms[`${roomX},${roomY}`].obstacles;
@@ -697,6 +722,37 @@
   }
 });
 
+document.addEventListener("keydown", (event) => {
+  if (event.code === "KeyX") {
+    const obstacles = rooms[`${roomX},${roomY}`].obstacles || [];
+    for (const obs of obstacles) {
+      if (obs.dataset.type === "plot") {
+        const ox = parseInt(obs.style.left);
+        const oy = parseInt(obs.style.top);
+        if (Math.abs(boxX - ox) < GRID_SIZE && Math.abs(boxY - oy) < GRID_SIZE) {
+          if (obs.dataset.state === "empty" && player.inventory['wheat-seed'] > 0) {
+            player.inventory['wheat-seed']--;
+            obs.dataset.state = "planted";
+            obs.style.backgroundColor = "darkgreen"; // visual indicator
+            updateInventoryUI();
+
+            // After 80 seconds, make it ready
+            setTimeout(() => {
+              obs.dataset.state = "ready";
+              obs.style.backgroundColor = "yellowgreen";
+            }, 80000);
+          } else if (obs.dataset.state === "ready") {
+            // Harvest
+            collectResource('wheat', 1);
+            collectResource('wheat-seed', 1);
+            obs.dataset.state = "empty";
+            obs.style.backgroundColor = "#654321";
+          }
+        }
+      }
+    }
+  }
+});
 
         // Punch Mechanic Handler (Updated to check tool requirement)
     document.addEventListener("keydown", (event) => {
@@ -752,7 +808,19 @@
             }
           }
         }
-        
+
+if (player.equipped.pickaxe === 'shovel') {
+  // Always collect dirt
+  collectResource('dirt', 1);
+
+  // 2% chance for wheat seed
+  if (Math.random() < 0.02) {
+    collectResource('wheat-seed', 1);
+    logMessage("You found a wheat seed!");
+  }
+  hitSomething = true; // counts as an action
+}
+
         if (!hitSomething) {
             // Check enemies (same as before)
             for (const enemy of enemies) {
