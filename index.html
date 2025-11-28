@@ -174,12 +174,12 @@
     };
 
     const resourceConfig = {
-      tree: { max: 30, regen: 5000, color: 'green', type: 'material', toolNeeded: null },
-      rock: { max: 20, regen: 10000, color: 'gray', type: 'material', toolNeeded: 'w-pickaxe' },
-      gold: { max: 10, regen: 20000, color: 'gold', type: 'material', toolNeeded: 'stone-axe' }, 
-      diamond: { max: 10, regen: 20000, color: 'cyan', type: 'material', toolNeeded: 'gold-axe' },
-      berrybush: { max: 6, regen: 8000, color: 'darkred', type: 'food', foodValue: 10, toolNeeded: null }
-    };
+  tree: { max: 30, regen: 5000, color: 'green', type: 'material' },
+  rock: { max: 20, regen: 10000, color: 'gray', type: 'material', toolNeeded: 'w-axe' },
+  gold: { max: 10, regen: 20000, color: 'gold', type: 'material', toolNeeded: 'stone-axe' },
+  diamond: { max: 10, regen: 20000, color: 'cyan', type: 'material', toolNeeded: 'gold-axe' },
+  berrybush: { max: 6, regen: 8000, color: 'darkred', type: 'food', foodValue: 10 }
+};
     // Add new items and their colors
     resourceConfig['meat'] = { color: 'pink', type: 'food', foodValue: 20 };
     resourceConfig['fur'] = { color: 'white', type: 'material' };
@@ -662,31 +662,30 @@
         for (const obs of obstacles) {
           if (checkProximity(obs)) { 
             const resourceType = obs.dataset.type;
-            const requiredTool = resourceConfig[resourceType].toolNeeded;
+            const resourceConfigEntry = resourceConfig[resourceType];
+            const requiredToolName = resourceConfigEntry.toolNeeded;
             let canHarvest = true;
             let equippedLevel = 0; // Bare hands have a harvest level of 0
 
-            // If we have a tool equipped, get its level
+            // Determine equipped tool level
             if (player.equipped.pickaxe && resourceConfig[player.equipped.pickaxe]) {
                 equippedLevel = resourceConfig[player.equipped.pickaxe].harvestLevel || 0;
             }
 
-            if (requiredTool) {
-                // If the resource requires a tool AND our equipped level is insufficient
-                // We must check the required tool's level against our equipped level
-                const requiredLevel = resourceConfig[requiredTool].harvestLevel || 99; // 99 is higher than any real tool
+            if (requiredToolName) {
+                // If a tool is required, get its level.
+                const requiredLevel = resourceConfig[requiredToolName].harvestLevel || 99;
 
+                // Compare levels
                 if (equippedLevel < requiredLevel) {
                     canHarvest = false;
-                    // Provide feedback based on what we need vs what we have
                     if (equippedLevel === 0) {
-                        logMessage(`You need a ${requiredTool} to harvest ${resourceType}.`);
+                        logMessage(`You need a ${requiredToolName} to mine ${resourceType}!`);
                     } else {
-                        logMessage(`Your ${player.equipped.pickaxe} isn't strong enough for ${resourceType}.`);
+                        logMessage(`Your ${player.equipped.pickaxe} isn't strong enough!`);
                     }
                 }
             }
-            // If the resource needs NO tool (like tree/bush) or our tool is sufficient:
             
             if (canHarvest) {
                 let amt = parseInt(obs.dataset.amount);
@@ -699,7 +698,6 @@
             }
           }
         }
-
         
         if (!hitSomething) {
             // Check enemies (same as before)
