@@ -413,11 +413,24 @@
             eatItem(clickedSlot.dataset.type);
         }
     });
-    function collectResource(type, amount) {
-        if (player.inventory[type]) player.inventory[type] += amount;
-        else player.inventory[type] = amount;
-        updateInventoryUI();
+   function collectResource(type, amount) {
+  // If resource already exists, just add
+  if (player.inventory[type]) {
+    player.inventory[type] += amount;
+  } else {
+    // Count unique items
+    const uniqueCount = Object.keys(player.inventory).length;
+    if (uniqueCount >= INVENTORY_SIZE) {
+      console.log("Inventory full! Cannot collect " + type);
+      return; // Do not add new resource
     }
+    player.inventory[type] = amount;
+  }
+  updateInventoryUI();
+  updateCraftingUI();
+}
+
+
     function damagePlayer(amount) {
         player.hp -= amount;
         lastHitTime = Date.now(); // IMPORTANT: resets hit timer
@@ -662,7 +675,19 @@
         updateCraftingUI(); 
       }
     });
-    
+    inventoryEl.addEventListener('contextmenu', (event) => {
+  event.preventDefault(); // Prevent browser menu
+  const clickedSlot = event.target.closest('.inv-slot');
+  if (clickedSlot && clickedSlot.dataset.type) {
+    const itemType = clickedSlot.dataset.type;
+    // Remove entire stack
+    delete player.inventory[itemType];
+    console.log(itemType + " stack discarded.");
+    updateInventoryUI();
+    updateCraftingUI();
+  }
+});
+
 
         // Punch Mechanic Handler (Updated to check tool requirement)
     document.addEventListener("keydown", (event) => {
