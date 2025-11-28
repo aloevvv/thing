@@ -661,37 +661,44 @@
         // Check obstacles (resources)
         for (const obs of obstacles) {
           if (checkProximity(obs)) { 
-    const resourceType = obs.dataset.type;
-    const resourceConfigEntry = resourceConfig[resourceType];
-    let canHarvest = true;
-    let equippedLevel = 0; // bare hands
+            const resourceType = obs.dataset.type;
+            const requiredTool = resourceConfig[resourceType].toolNeeded;
+            let canHarvest = true;
+            let equippedLevel = 0; // Bare hands have a harvest level of 0
 
-    if (player.equipped.pickaxe && resourceConfig[player.equipped.pickaxe]) {
-        equippedLevel = resourceConfig[player.equipped.pickaxe].harvestLevel || 0;
-    }
-
-    if (resourceConfigEntry.toolNeeded) {
-        const requiredLevel = resourceConfig[resourceConfigEntry.toolNeeded].harvestLevel || 99;
-        if (equippedLevel < requiredLevel) {
-            canHarvest = false;
-            if (equippedLevel === 0) {
-                logMessage(`You need a ${resourceConfigEntry.toolNeeded} to mine ${resourceType}!`);
-            } else {
-                logMessage(`Your ${player.equipped.pickaxe} isn't strong enough to mine ${resourceType}!`);
+            // If we have a tool equipped, get its level
+            if (player.equipped.pickaxe && resourceConfig[player.equipped.pickaxe]) {
+                equippedLevel = resourceConfig[player.equipped.pickaxe].harvestLevel || 0;
             }
-        }
-    }
 
-    if (canHarvest) {
-        let amt = parseInt(obs.dataset.amount);
-        if (amt > 0) {
-            obs.dataset.amount = amt - 1;
-            collectResource(resourceType, 1);
-            hitSomething = true;
-            break;
+            if (requiredTool) {
+                // If the resource requires a tool AND our equipped level is insufficient
+                // We must check the required tool's level against our equipped level
+                const requiredLevel = resourceConfig[requiredTool].harvestLevel || 99; // 99 is higher than any real tool
+
+                if (equippedLevel < requiredLevel) {
+                    canHarvest = false;
+                    // Provide feedback based on what we need vs what we have
+                    if (equippedLevel === 0) {
+                        logMessage(`You need a ${requiredTool} to harvest ${resourceType}.`);
+                    } else {
+                        logMessage(`Your ${player.equipped.pickaxe} isn't strong enough for ${resourceType}.`);
+                    }
+                }
+            }
+            // If the resource needs NO tool (like tree/bush) or our tool is sufficient:
+            
+            if (canHarvest) {
+                let amt = parseInt(obs.dataset.amount);
+                if (amt > 0) {
+                  obs.dataset.amount = amt - 1;
+                  collectResource(obs.dataset.type, 1);
+                  hitSomething = true;
+                  break; // Only hit one thing
+                }
+            }
+          }
         }
-    }
-}
 
         
         if (!hitSomething) {
