@@ -183,9 +183,13 @@
     // Add new items and their colors
     resourceConfig['meat'] = { color: 'pink', type: 'food', foodValue: 20 };
     resourceConfig['fur'] = { color: 'white', type: 'material' };
-    resourceConfig['w-pickaxe'] = { color: '#8b4513', type: 'tool', equip: 'pickaxe' }; // Brown
+    resourceConfig['w-pickaxe'] = { color: '#8b4513', type: 'tool', equip: 'pickaxe' }; 
     resourceConfig['w-helm'] = { color: '#8b4513', type: 'armor', equip: 'helmet', defense: 1 };
     resourceConfig['w-sword'] = { color: '#8b4513', type: 'weapon', equip: 'sword', damageBoost: 5 };
+    resourceConfig['w-pickaxe'] = { color: '#8b4513', type: 'tool', equip: 'pickaxe', harvestLevel: 1 };
+    resourceConfig['stone-axe'] = { color: '#7f7f7f', type: 'tool', equip: 'pickaxe', harvestLevel: 2 };
+    resourceConfig['gold-axe'] = { color: 'gold', type: 'tool', equip: 'pickaxe', harvestLevel: 3 };
+    resourceConfig['diamond-axe'] = { color: 'cyan', type: 'tool', equip: 'pickaxe', harvestLevel: 4 };
     resourceConfig['craftingtable'] = { color: '#8b4513', type: 'placeable' };
 
     const enemyConfig = {
@@ -200,8 +204,9 @@
         'w-helm': { costs: { tree: 50 }, requiresTable: false },
         'w-sword': { costs: { tree: 35 }, requiresTable: false },
         'craftingtable': { costs: { tree: 30 }, requiresTable: false },
-        // Add future recipes here that require the table
-        // 'stone-pickaxe': { costs: { rock: 20, tree: 10 }, requiresTable: true }
+        'stone-axe': { costs: { tree: 40, rock: 30 }, requiresTable: true },
+        'gold-axe': { costs: { tree: 50, gold: 40 }, requiresTable: true },
+        'diamond-axe': { costs: { tree: 60, diamond: 50 }, requiresTable: true }
     };
 
     // --- UI Update Functions ---
@@ -639,50 +644,66 @@
     });
     
     // Punch Mechanic Handler (Attacking enemies/harvesting resources)
+        // Punch Mechanic Handler (Updated to check tool requirement)
     document.addEventListener("keydown", (event) => {
       if (event.code === "Space") {
         const obstacles = rooms[`${roomX},${roomY}`].obstacles || [];
         const enemies = rooms[`${roomX},${roomY}`].enemies || [];
-        // Default punch damage + sword bonus if equipped
         let punchDamage = 10; 
-        if (player.equipped.sword && resourceConfig[player.equipped.sword]) {
-            punchDamage += resourceConfig[player.equipped.sword].damageBoost;
-        }
+        if (player.equipped.sword && resourceConfig[player.equipped.sword]) punchDamage += resourceConfig[player.equipped.sword].damageBoost;
 
+        const checkProximity = (ent) => {
+            const ox = parseInt(ent.style.left); const oy = parseInt(ent.style.top);
+            return Math.abs(boxX - ox) < 50 && Math.abs(boxY - oy) < 50;
+        };
+
+        let hitSomething = false;
         // Check obstacles (resources)
         for (const obs of obstacles) {
-          const ox = parseInt(obs.style.left);
-          const oy = parseInt(obs.style.top);
-          if (Math.abs(boxX - ox) < 50 && Math.abs(boxY - oy) < 50) { 
-            // Future feature: pickaxe efficiency bonus
-            let amt = parseInt(obs.dataset.amount);
-            if (amt > 0) {
-              obs.dataset.amount = amt - 1;
-              collectResource(obs.dataset.type, 1);
-              break;
+          if (checkProximity(obs)) { 
+            const resourceType = obs.dataset.type;
+            const requiredTool = resourceConfig[resourceType].toolNeeded;
+            let canHarvest = true;
+
+            if (requiredTool) {
+                // Check if *any* tool is equipped in the pickaxe slot
+                if (!player.equipped.pickaxe) {
+                    canHarvest = false;
+                    logMessage(`Need a ${requiredTool} to mine ${resourceType}!`);
+                } else {
+                    // Check if the equipped tool meets or exceeds the required level
+                    const equippedToolLevel = resourceConfig[player.equipped.pickaxe].harvestLevel || 0;
+                    const requiredToolLevel = resourceConfig[requiredTool].harvestLevel || 99; // 99 ensures basic pick can't mine diamond
+                    
+                    if (equippedToolLevel < requiredToolLevel) {
+                        canHarvest = false;
+                        logMessage(`Your ${player.equipped.pickaxe} isn't strong enough for ${resourceType}!`);
+                    }
+                }
+            }
+
+            if (canHarvest) {
+                let amt = parseInt(obs.dataset.amount);
+                if (amt > 0) {
+                  obs.dataset.amount = amt - 1;
+                  collectResource(obs.dataset.type, 1);
+                  hitSomething = true;
+                  break; // Only hit one thing at a time
+                }
             }
           }
         }
         
-        // Check enemies
-        for (const enemy of enemies) {
-            if (enemy.dataset.hp <= 0 || enemy.parentNode !== gameArea) continue;
-            const eX = parseInt(enemy.style.left);
-            const eY = parseInt(enemy.style.top);
-
-            if (Math.abs(boxX - eX) < 50 && Math.abs(boxY - eY) < 50) {
-                let hp = parseInt(enemy.dataset.hp);
-                hp -= punchDamage;
-                enemy.dataset.hp = hp;
-                enemy.textContent = `${enemy.dataset.type} (${hp})`;
-                if (hp <= 0) {
-                    gameArea.removeChild(enemy);
-                    const drops = enemyConfig[enemy.dataset.type].drops;
-                    for (const dropType in drops) {
-                        collectResource(dropType, drops[dropType]);
-                    }
+        if (!hitSomething) {
+            // Check enemies (same as before)
+            for (const enemy of enemies) {
+                if (enemy.dataset.hp <= 0 || enemy.parentNode !== gameArea) continue;
+                if (checkProximity(enemy)) {
+                    let hp = parseInt(enemy.dataset.hp); hp -= punchDamage; enemy.dataset.hp = hp; enemy.textContent = `${enemy.dataset.type} (${hp})`;
+                    if (hp <= 0) { gameArea.removeChild(enemy); const drops = enemyConfig[enemy.dataset.type].drops; for (const dropType in drops) collectResource(dropType, drops[dropType]); logMessage(`${enemy.dataset.type} defeated!`); }
+                    else { logMessage(`Dealt ${punchDamage} damage to ${enemy.dataset.type}.`); }
+                    break;
                 }
-                break;
             }
         }
       }
