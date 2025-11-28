@@ -88,6 +88,10 @@
   border: 2px solid #000000;      
   box-sizing: border-box;
 }
+    .firepit.lit {
+  background-color: red; 
+  box-shadow: 0 0 10px red;
+}
 
 
     /* Enemy styles */
@@ -545,6 +549,7 @@ function placeFirePit() {
   currentRoomData.obstacles.push(pit);
   gameArea.appendChild(pit);
 
+ 
   pit.addEventListener("click", () => {
     const treesToUse = parseInt(prompt("How many trees to fuel the pit?"), 10);
     if (player.inventory['tree'] >= treesToUse) {
@@ -559,8 +564,9 @@ function placeFirePit() {
     if (pit.dataset.fuel > 0) {
       pit.dataset.fuel--;
     }
-  }, 3000); // each tree = 1 tick
+  }, 3000); 
 }
+
 
     
     function isNearCraftingTable() {
@@ -769,31 +775,27 @@ function placeFirePit() {
     updateInventoryUI();
     updateCraftingUI();
     updateCoordDisplay();
-    let isDay = true;   // start daytime
-    let dayNightInterval;
+    let isDay = true;
+let cycleTimer = 0;
 
-// cycle: 2 min day → 1 min night
 function startDayNightCycle() {
-  isDay = true;
   updateDayNightUI();
 
-  dayNightInterval = setInterval(() => {
-    if (isDay) {
+  setInterval(() => {
+    cycleTimer++;
+
+    if (isDay && cycleTimer >= 40) { // 40 ticks * 3s = 120s
       isDay = false;
-      setTimeout(() => {
-        isDay = true;
-        updateDayNightUI();
-      }, 60000); // 1 min night
-    } else {
+      cycleTimer = 0;
+      updateDayNightUI();
+    } else if (!isDay && cycleTimer >= 20) { // 20 ticks * 3s = 60s
       isDay = true;
-      setTimeout(() => {
-        isDay = false;
-        updateDayNightUI();
-      }, 120000); // 2 min day
+      cycleTimer = 0;
+      updateDayNightUI();
     }
-    updateDayNightUI();
-  }, 180000); // full cycle length
+  }, 3000); // tick every 3 seconds
 }
+
 
 function updateDayNightUI() {
   document.body.style.backgroundColor = isDay ? "darkgreen" : "darkblue";
