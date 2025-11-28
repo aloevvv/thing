@@ -47,7 +47,7 @@
     .diamond { background-color: cyan; }
     .berrybush { background-color: darkred; border-radius: 50%; }
 
-    /* Enemy styles - added a slight border to distinguish from player */
+    /* Enemy styles */
     .enemy {
       position: absolute;
       width: 40px;
@@ -58,15 +58,15 @@
       color: white;
       font-size: 10px;
       transition: left 0.4s linear, top 0.4s linear;
-      z-index: 5; /* Below player, above ground */
-      border: 2px solid red; /* Highlight enemies */
+      z-index: 5;
+      border: 2px solid red;
       box-sizing: border-box;
     }
     .wolf { background-color: brown; }
     .bear { background-color: black; }
     .fox { background-color: orange; }
 
-    /* UI Overlay and Inventory styles */
+    /* UI Overlay and Inventory styles remain the same */
     #uiContainer { display: flex; flex-direction: column; width: 600px; }
     .status-bar-container { width: 100%; height: 20px; background-color: rgba(0, 0, 0, 0.5); border: 1px solid white; margin-bottom: 5px; position: relative; }
     .status-bar-fill { height: 100%; transition: width 0.3s ease-out; }
@@ -140,7 +140,7 @@
     resourceConfig['meat'] = { color: 'pink', type: 'food', foodValue: 20 };
     resourceConfig['fur'] = { color: 'white', type: 'material' };
 
-    // --- UI Update Functions (Same as before) ---
+    // --- UI Update Functions ---
     function updateHPUI() {
         hpValueEl.textContent = player.hp;
         const percent = (player.hp / player.maxHp) * 100;
@@ -177,7 +177,7 @@
         }
     }
 
-    // --- Interaction Logic (Same as before) ---
+    // --- Interaction Logic ---
     function eatItem(itemType) {
         const config = resourceConfig[itemType];
         if (config && config.type === 'food' && player.inventory[itemType] > 0) {
@@ -202,7 +202,7 @@
     }
     function damagePlayer(amount) {
         player.hp -= amount;
-        lastHitTime = Date.now();
+        lastHitTime = Date.now(); // IMPORTANT: resets hit timer
         updateHPUI();
     }
 
@@ -235,35 +235,25 @@
     }
 
     function placeEnemies(enemies) {
-        // Use 10% spawn chance per animal type
-        if (Math.random() < enemyConfig.wolf.spawnChance) {
-             enemies.push(createEnemy('wolf', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
-        }
-        if (Math.random() < enemyConfig.bear.spawnChance) {
-            enemies.push(createEnemy('bear', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
-        }
-        if (Math.random() < enemyConfig.fox.spawnChance) {
-            enemies.push(createEnemy('fox', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
-        }
+        if (Math.random() < enemyConfig.wolf.spawnChance) enemies.push(createEnemy('wolf', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
+        if (Math.random() < enemyConfig.bear.spawnChance) enemies.push(createEnemy('bear', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
+        if (Math.random() < enemyConfig.fox.spawnChance) enemies.push(createEnemy('fox', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
     }
     
     function generateRoom(rx, ry) {
       const key = `${rx},${ry}`;
       if (rooms[key]) return rooms[key];
-
       const roomData = { obstacles: [], enemies: [], intervals: [] };
       placeObstacle("tree", Math.floor(Math.random() * 3) + 2, roomData.obstacles);
       placeObstacle("rock", Math.floor(Math.random() * 2) + 1, roomData.obstacles);
       if (Math.random() < 0.25) placeObstacle("gold", 1, roomData.obstacles);
       if (Math.random() < 0.05) placeObstacle("diamond", 1, roomData.obstacles);
       placeObstacle("berrybush", Math.floor(Math.random() * 3) + 1, roomData.obstacles);
-
       placeEnemies(roomData.enemies);
-
       rooms[key] = roomData;
       return roomData;
     }
-
+    // ... clearRoom and loadRoom functions remain the same as previous response ...
     function clearRoom() {
       const key = `${roomX},${roomY}`;
       const currentRoomData = rooms[key];
@@ -274,7 +264,6 @@
           currentRoomData.intervals = [];
       }
     }
-
     function loadRoom(rx, ry) {
       const roomData = generateRoom(rx, ry);
       roomData.obstacles.forEach(obs => {
@@ -291,19 +280,17 @@
       });
     }
 
-    // Collision check function (now only checks against obstacles, NOT enemies/player)
+    // Collision check function (ONLY for solid obstacles/walls)
     function checkObstacleCollision(x, y, obstacles) {
         const rect1 = {x, y, w: GRID_SIZE, h: GRID_SIZE};
         for (const item of obstacles) {
-            if (item.parentNode === gameArea) { // Ensure it's in the current DOM
-                const rect2 = item.getBoundingClientRect();
-                const areaRect = gameArea.getBoundingClientRect();
-                const ox = rect2.left - areaRect.left;
-                const oy = rect2.top - areaRect.top;
-                const ow = rect2.width;
-                const oh = rect2.height;
+            if (item.parentNode === gameArea) {
+                const ox = parseInt(item.style.left);
+                const oy = parseInt(item.style.top);
+                const rect2 = {x: ox, y: oy, w: GRID_SIZE, h: GRID_SIZE};
 
-                if (rect1.x < ox + ow && rect1.x + rect1.w > ox && rect1.y < oy + oh && rect1.y + rect1.h > oy) {
+                if (rect1.x < rect2.x + rect2.w && rect1.x + rect1.w > rect2.x &&
+                    rect1.y < rect2.y + rect2.h && rect1.y + rect1.h > rect2.y) {
                     return true;
                 }
             }
@@ -313,19 +300,19 @@
 
     function canMovePlayer(newX, newY) {
         const currentRoomData = rooms[`${roomX},${roomY}`];
-        // Only check collision against obstacles
+        // Player only checks collision against obstacles, not enemies
         return !checkObstacleCollision(newX, newY, currentRoomData.obstacles);
     }
     
     // --- Core Game Loops and Handlers ---
 
-    // ... Initial setup (same as before) ...
+    // Initial setup
     loadRoom(roomX, roomY);
     updateHPUI();
     updateHungerUI();
     updateInventoryUI();
 
-    // Hunger/Damage loops (same as before, now uses damagePlayer function)
+    // Hunger depletion loop (45 seconds) and Damage/Regen loop (3 seconds)
     setInterval(() => {
         if (player.hunger > 0) {
             player.hunger -= 10;
@@ -336,10 +323,11 @@
 
     setInterval(() => {
         if (player.hunger === 0 && player.hp > 0) {
-            damagePlayer(10); // Uses damagePlayer to set lastHitTime
+            damagePlayer(10);
         }
-        // Healing logic: 5 HP every 3 seconds if conditions met
-        if (Date.now() - lastHitTime >= 5000 && player.hp > player.maxHp * 0.70 && player.hp < player.maxHp) {
+        
+        // Healing logic: 5 HP every 3 seconds if not hit for 5s AND hunger > 70%
+        if (Date.now() - lastHitTime >= 5000 && player.hunger > player.maxHunger * 0.70 && player.hp < player.maxHp) {
             player.hp += 5;
             if (player.hp > player.maxHp) player.hp = player.maxHp;
             updateHPUI();
@@ -347,7 +335,7 @@
     }, 3000);
 
 
-    // AI Update Loop (~0.5 seconds for all enemies in the room)
+    // AI Update Loop (~0.5 seconds) - Enemies now phase through each other and player
     setInterval(() => {
         const currentRoomData = rooms[`${roomX},${roomY}`];
         if (!currentRoomData) return;
@@ -362,12 +350,11 @@
             const distance = Math.sqrt(dx * dx + dy * dy);
             const config = enemyConfig[enemy.dataset.type];
 
-            // Use the larger detection range config
-            if (distance < config.range) {
+            // Use larger range for detection
+            if (distance < config.range) { 
                 let moveX = 0;
                 let moveY = 0;
-                // Move based on enemy speed (foxes quicker, bears slower) - adjust step size based on config
-                const enemyStep = config.speed; // Speed is used as move amount now
+                const enemyStep = config.speed;
                 
                 if (Math.abs(dx) > Math.abs(dy)) {
                     moveX = Math.sign(dx) * enemyStep;
@@ -378,11 +365,9 @@
                 let newEX = eX + moveX;
                 let newEY = eY + moveY;
 
-                // Enemies can pass through each other and the player, but still stop at walls/boundaries
-                const allObstacles = currentRoomData.obstacles;
-                
-                if (!checkObstacleCollision(newEX, newEY, allObstacles)) {
-                    // Also boundary check for enemies
+                // Check collision only against *obstacles* (walls), not other entities
+                if (!checkObstacleCollision(newEX, newEY, currentRoomData.obstacles)) {
+                    // Boundary check
                     if (newEX >= 0 && newEX <= gameArea.offsetWidth - GRID_SIZE &&
                         newEY >= 0 && newEY <= gameArea.offsetHeight - GRID_SIZE) {
                             enemy.style.left = newEX + "px";
@@ -405,7 +390,7 @@
             const eY = parseInt(enemy.style.top);
             const config = enemyConfig[enemy.dataset.type];
 
-            // Check adjacency for attack (within one grid size + a bit for diagonals)
+            // Check adjacency for attack
             const dx = Math.abs(boxX - eX);
             const dy = Math.abs(boxY - eY);
             if (dx < GRID_SIZE && dy < GRID_SIZE) { 
@@ -415,7 +400,7 @@
     }, 3000);
 
 
-    // Movement Handler (Uses canMovePlayer which checks only obstacles)
+    // Movement Handler
     document.addEventListener("keydown", (event) => {
       let newX = boxX;
       let newY = boxY;
@@ -442,7 +427,7 @@
       }
     });
     
-    // Punch Mechanic Handler (Same as before)
+    // Punch Mechanic Handler (same as before)
     document.addEventListener("keydown", (event) => {
       if (event.code === "Space") {
         const obstacles = rooms[`${roomX},${roomY}`].obstacles || [];
@@ -457,7 +442,7 @@
             if (amt > 0) {
               obs.dataset.amount = amt - 1;
               collectResource(obs.dataset.type, 1);
-              break; // Only hit one thing
+              break;
             }
           }
         }
