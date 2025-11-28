@@ -63,119 +63,107 @@
   </div>
 
   <script>
-    const gameArea = document.getElementById("gameArea");
-    const box = document.getElementById("box");
-    const step = 20;
+  const gameArea = document.getElementById("gameArea");
+  const box = document.getElementById("box");
+  const step = 20;
 
-    // Player position
-    let boxX = 280;
-    let boxY = 180;
+  let boxX = 280;
+  let boxY = 180;
+  let roomX = 0;
+  let roomY = 0;
 
-    // Current room coordinates
-    let roomX = 0;
-    let roomY = 0;
+  const rooms = {};
 
-    // Store rooms permanently
-    const rooms = {};
+  function generateRoom(rx, ry) {
+    const key = `${rx},${ry}`;
+    if (rooms[key]) return rooms[key]; // Already generated
 
-    // Generate a room with obstacles
-    function generateRoom(rx, ry) {
-      const key = `${rx},${ry}`;
-      if (rooms[key]) return rooms[key]; // Already generated
+    const obstacles = [];
 
-      const obstacles = [];
+    function randomPos() {
+      return {
+        x: Math.floor(Math.random() * (gameArea.offsetWidth - 40)),
+        y: Math.floor(Math.random() * (gameArea.offsetHeight - 40))
+      };
+    }
 
-      // Helper to place obstacle
-      function place(type, count) {
-        for (let i = 0; i < count; i++) {
-          const obs = document.createElement("div");
-          obs.className = type;
-          obs.style.left = Math.floor(Math.random() * (gameArea.offsetWidth - 40)) + "px";
-          obs.style.top = Math.floor(Math.random() * (gameArea.offsetHeight - 40)) + "px";
-          gameArea.appendChild(obs);
-          obstacles.push(obs);
-        }
+    function add(type, count) {
+      for (let i = 0; i < count; i++) {
+        const pos = randomPos();
+        obstacles.push({ type, ...pos });
       }
-
-      // Guaranteed trees (2–4)
-      place("tree", Math.floor(Math.random() * 3) + 2);
-
-      // Guaranteed rocks (1–2)
-      place("rock", Math.floor(Math.random() * 2) + 1);
-
-      // 25% chance gold
-      if (Math.random() < 0.25) place("gold", 1);
-
-      // 5% chance diamond
-      if (Math.random() < 0.05) place("diamond", 1);
-
-      rooms[key] = obstacles;
-      return obstacles;
     }
 
-    // Clear current obstacles
-    function clearRoom() {
-      const children = Array.from(gameArea.children);
-      children.forEach(child => {
-        if (child !== box) gameArea.removeChild(child);
-      });
-    }
+    add("tree", Math.floor(Math.random() * 3) + 2);
+    add("rock", Math.floor(Math.random() * 2) + 1);
+    if (Math.random() < 0.25) add("gold", 1);
+    if (Math.random() < 0.05) add("diamond", 1);
 
-    // Load room
-    function loadRoom(rx, ry) {
-      clearRoom();
-      generateRoom(rx, ry);
-    }
+    rooms[key] = obstacles;
+    return obstacles;
+  }
 
-    // Collision detection
-    function canMove(newX, newY) {
-      const boxRect = {x:newX, y:newY, w:40, h:40};
-      const obstacles = rooms[`${roomX},${roomY}`] || [];
-      for (const obs of obstacles) {
-        const rect = obs.getBoundingClientRect();
-        const areaRect = gameArea.getBoundingClientRect();
-        const ox = rect.left - areaRect.left;
-        const oy = rect.top - areaRect.top;
-        const ow = rect.width;
-        const oh = rect.height;
-        if (boxRect.x < ox + ow &&
-            boxRect.x + boxRect.w > ox &&
-            boxRect.y < oy + oh &&
-            boxRect.y + boxRect.h > oy) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    // Initial room
-    loadRoom(roomX, roomY);
-    box.style.left = boxX + "px";
-    box.style.top = boxY + "px";
-
-    document.addEventListener("keydown", (event) => {
-      let newX = boxX;
-      let newY = boxY;
-
-      if (event.key === "ArrowUp") newY -= step;
-      if (event.key === "ArrowDown") newY += step;
-      if (event.key === "ArrowLeft") newX -= step;
-      if (event.key === "ArrowRight") newX += step;
-
-      // Check if off screen
-      if (newX < 0) { roomX--; newX = gameArea.offsetWidth - 40; loadRoom(roomX, roomY); }
-      else if (newX > gameArea.offsetWidth - 40) { roomX++; newX = 0; loadRoom(roomX, roomY); }
-      else if (newY < 0) { roomY--; newY = gameArea.offsetHeight - 40; loadRoom(roomX, roomY); }
-      else if (newY > gameArea.offsetHeight - 40) { roomY++; newY = 0; loadRoom(roomX, roomY); }
-
-      // Collision check
-      if (canMove(newX, newY)) {
-        boxX = newX;
-        boxY = newY;
-        box.style.left = boxX + "px";
-        box.style.top = boxY + "px";
-      }
+  function clearRoom() {
+    const children = Array.from(gameArea.children);
+    children.forEach(child => {
+      if (child !== box) gameArea.removeChild(child);
     });
-  </script>
+  }
+
+  function renderRoom(rx, ry) {
+    clearRoom();
+    const obstacles = generateRoom(rx, ry);
+    obstacles.forEach(obs => {
+      const div = document.createElement("div");
+      div.className = obs.type;
+      div.style.left = obs.x + "px";
+      div.style.top = obs.y + "px";
+      div.style.position = "absolute";
+      div.style.width = "40px";
+      div.style.height = "40px";
+      gameArea.appendChild(div);
+    });
+  }
+
+  function canMove(newX, newY) {
+    const boxRect = {x:newX, y:newY, w:40, h:40};
+    const obstacles = rooms[`${roomX},${roomY}`] || [];
+    for (const obs of obstacles) {
+      if (boxRect.x < obs.x + 40 &&
+          boxRect.x + boxRect.w > obs.x &&
+          boxRect.y < obs.y + 40 &&
+          boxRect.y + boxRect.h > obs.y) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  renderRoom(roomX, roomY);
+  box.style.left = boxX + "px";
+  box.style.top = boxY + "px";
+
+  document.addEventListener("keydown", (event) => {
+    let newX = boxX;
+    let newY = boxY;
+
+    if (event.key === "ArrowUp") newY -= step;
+    if (event.key === "ArrowDown") newY += step;
+    if (event.key === "ArrowLeft") newX -= step;
+    if (event.key === "ArrowRight") newX += step;
+
+    if (newX < 0) { roomX--; newX = gameArea.offsetWidth - 40; renderRoom(roomX, roomY); }
+    else if (newX > gameArea.offsetWidth - 40) { roomX++; newX = 0; renderRoom(roomX, roomY); }
+    else if (newY < 0) { roomY--; newY = gameArea.offsetHeight - 40; renderRoom(roomX, roomY); }
+    else if (newY > gameArea.offsetHeight - 40) { roomY++; newY = 0; renderRoom(roomX, roomY); }
+
+    if (canMove(newX, newY)) {
+      boxX = newX;
+      boxY = newY;
+      box.style.left = boxX + "px";
+      box.style.top = boxY + "px";
+    }
+  });
+</script>
 </body>
 </html>
