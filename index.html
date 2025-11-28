@@ -122,6 +122,28 @@
     .item-icon { width: 80%; height: 80%; margin: 10% auto; }
     .item-count { position: absolute; bottom: 2px; right: 2px; font-size: 10px; color: white; text-shadow: 1px 1px 1px black; }
     .equipped { border: 2px solid cyan; } /* Highlight equipped items */
+#controlsPopup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: saddlebrown; /* brown background */
+  color: white;                  /* white text */
+  padding: 20px;
+  border: 3px solid white;
+  border-radius: 8px;
+  font-family: sans-serif;
+  font-size: 14px;
+  z-index: 100;
+  display: none; /* hidden by default */
+  width: 300px;
+  text-align: left;
+}
+
+#controlsPopup h2 {
+  margin-top: 0;
+  text-align: center;
+}
 
 
     /* Crafting Area UI */
@@ -183,6 +205,19 @@
 </div>
     <div id="inventory"></div>
   </div>
+  
+  <div id="controlsPopup">
+  <h2>Controls</h2>
+  <ul>
+    <li>Arrow keys → Move</li>
+    <li>Q → Show/Hide this popup</li>
+    <li>X → Plant seeds</li>
+    <li>Click → Fuel fire pits</li>
+    <li>Space → Punch</li>
+    <!-- Add more controls here -->
+  </ul>
+</div>
+
 
   <script>
         // --- DOM ELEMENT REFERENCES ---
@@ -924,6 +959,20 @@ setInterval(() => {
     updateCraftingUI();
   }
 });
+
+    const controlsPopup = document.getElementById("controlsPopup");
+
+document.addEventListener("keydown", (event) => {
+  if (event.code === "KeyQ") {
+    // Toggle popup visibility
+    if (controlsPopup.style.display === "none" || controlsPopup.style.display === "") {
+      controlsPopup.style.display = "block";
+    } else {
+      controlsPopup.style.display = "none";
+    }
+  }
+});
+
 
 document.addEventListener("keydown", (event) => {
   if (event.code === "KeyX") {
