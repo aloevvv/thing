@@ -661,43 +661,38 @@
         // Check obstacles (resources)
         for (const obs of obstacles) {
           if (checkProximity(obs)) { 
-            const resourceType = obs.dataset.type;
-            const resourceConfigEntry = resourceConfig[resourceType];
-            const requiredToolName = resourceConfigEntry.toolNeeded;
-            let canHarvest = true;
-            let equippedLevel = 0; // Bare hands have a harvest level of 0
+    const resourceType = obs.dataset.type;
+    const resourceConfigEntry = resourceConfig[resourceType];
+    let canHarvest = true;
+    let equippedLevel = 0; // bare hands
 
-            // Determine equipped tool level
-            if (player.equipped.pickaxe && resourceConfig[player.equipped.pickaxe]) {
-                equippedLevel = resourceConfig[player.equipped.pickaxe].harvestLevel || 0;
-            }
+    if (player.equipped.pickaxe && resourceConfig[player.equipped.pickaxe]) {
+        equippedLevel = resourceConfig[player.equipped.pickaxe].harvestLevel || 0;
+    }
 
-            if (requiredToolName) {
-                // If a tool is required, get its level.
-                const requiredLevel = resourceConfig[requiredToolName].harvestLevel || 99;
-
-                // Compare levels
-                if (equippedLevel < requiredLevel) {
-                    canHarvest = false;
-                    if (equippedLevel === 0) {
-                        logMessage(`You need a ${requiredToolName} to mine ${resourceType}!`);
-                    } else {
-                        logMessage(`Your ${player.equipped.pickaxe} isn't strong enough!`);
-                    }
-                }
+    if (resourceConfigEntry.toolNeeded) {
+        const requiredLevel = resourceConfig[resourceConfigEntry.toolNeeded].harvestLevel || 99;
+        if (equippedLevel < requiredLevel) {
+            canHarvest = false;
+            if (equippedLevel === 0) {
+                logMessage(`You need a ${resourceConfigEntry.toolNeeded} to mine ${resourceType}!`);
+            } else {
+                logMessage(`Your ${player.equipped.pickaxe} isn't strong enough to mine ${resourceType}!`);
             }
-            
-            if (canHarvest) {
-                let amt = parseInt(obs.dataset.amount);
-                if (amt > 0) {
-                  obs.dataset.amount = amt - 1;
-                  collectResource(obs.dataset.type, 1);
-                  hitSomething = true;
-                  break; // Only hit one thing
-                }
-            }
-          }
         }
+    }
+
+    if (canHarvest) {
+        let amt = parseInt(obs.dataset.amount);
+        if (amt > 0) {
+            obs.dataset.amount = amt - 1;
+            collectResource(resourceType, 1);
+            hitSomething = true;
+            break;
+        }
+    }
+}
+
         
         if (!hitSomething) {
             // Check enemies (same as before)
