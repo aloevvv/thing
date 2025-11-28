@@ -560,18 +560,16 @@ function placeFirePit() {
   });
 
   setInterval(() => {
-  if (pit.dataset.fuel > 0) {
-    pit.dataset.fuel--;
-    
-    if (!pit.classList.contains('lit')) {
-      pit.classList.add('lit');
+    let fuel = parseInt(pit.dataset.fuel);
+    if (fuel > 0) {
+      pit.dataset.fuel = fuel - 1;
+      if (pit.dataset.fuel <= 0) {
+        pit.style.backgroundColor = "#361919";
+        pit.style.boxShadow = "none";
+      }
     }
-  } else {
-    if (pit.classList.contains('lit')) {
-      pit.classList.remove('lit');
-    }
-  }
-}, 3000);
+  }, 3000);
+}
 
 
 
