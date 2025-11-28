@@ -24,7 +24,16 @@
       overflow: hidden;
       margin-bottom: 10px;
     }
-
+    #coordDisplay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px black;
+  z-index: 30;
+}
     #box {
       position: absolute;
       width: 40px;
@@ -120,6 +129,8 @@
   <div id="craftingArea">
       <!-- Crafting options appear here -->
   </div>
+  <div id="coordDisplay">0,0</div>
+  
   <div id="gameArea">
     <div id="box"></div>
   </div>
@@ -505,6 +516,11 @@
         }
         return false;
     }
+    
+    function updateCoordDisplay() {
+  document.getElementById("coordDisplay").textContent = `${roomX},${roomY}`;
+}
+
 
     function canMovePlayer(newX, newY) {
         const currentRoomData = rooms[`${roomX},${roomY}`];
@@ -519,6 +535,7 @@
     updateHungerUI();
     updateInventoryUI();
     updateCraftingUI();
+    updateCoordDisplay();
 
 
     // Hunger depletion loop (45 seconds) and Damage/Regen loop (3 seconds)
@@ -631,7 +648,10 @@
       else if (newY < 0) { clearRoom(); roomY--; newY = gameArea.offsetHeight - 40; roomChanged = true; }
       else if (newY > gameArea.offsetHeight - 40) { clearRoom(); roomY++; newY = 0; roomChanged = true; }
 
-      if (roomChanged) loadRoom(roomX, roomY);
+      if (roomChanged) {
+  loadRoom(roomX, roomY);
+  updateCoordDisplay();
+}
 
       if (canMovePlayer(newX, newY)) {
         boxX = newX;
