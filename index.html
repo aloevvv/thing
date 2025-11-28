@@ -1,19 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JS Starve.io Inspired Game</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Procedural Room Game</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background-color: darkgreen;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #gameArea {
+      position: relative;
+      width: 600px;
+      height: 400px;
+      border: 2px solid white;
+      overflow: hidden;
+    }
+
+    #box {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background-color: white;
+    }
+
+    .tree {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background-color: green;
+    }
+
+    .rock {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background-color: gray;
+    }
+
+    .gold {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background-color: gold;
+    }
+
+    .diamond {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background-color: cyan;
+    }
+  </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    <div id="ui-container">
-        <!-- UI elements will be injected here by JavaScript -->
-        <div id="stats-panel"></div>
-        <div id="inventory-panel"></div>
-        <div id="crafting-panel"></div>
-    </div>
-    <script src="game.js"></script>
+  <div id="gameArea">
+    <div id="box"></div>
+  </div>
+
+  <script>
+    const gameArea = document.getElementById("gameArea");
+    const box = document.getElementById("box");
+    const step = 20;
+
+    // Player position
+    let boxX = 280;
+    let boxY = 180;
+
+    // Current room coordinates
+    let roomX = 0;
+    let roomY = 0;
+
+    // Store rooms permanently
+    const rooms = {};
+
+    // Generate a room with obstacles
+    function generateRoom(rx, ry) {
+      const key = `${rx},${ry}`;
+      if (rooms[key]) return rooms[key]; // Already generated
+
+      const obstacles = [];
+
+      // Helper to place obstacle
+      function place(type, count) {
+        for (let i = 0; i < count; i++) {
+          const obs = document.createElement("div");
+          obs.className = type;
+          obs.style.left = Math.floor(Math.random() * (gameArea.offsetWidth - 40)) + "px";
+          obs.style.top = Math.floor(Math.random() * (gameArea.offsetHeight - 40)) + "px";
+          gameArea.appendChild(obs);
+          obstacles.push(obs);
+        }
+      }
+
+      // Guaranteed trees (2–4)
+      place("tree", Math.floor(Math.random() * 3) + 2);
+
+      // Guaranteed rocks (1–2)
+      place("rock", Math.floor(Math.random() * 2) + 1);
+
+      // 25% chance gold
+      if (Math.random() < 0.25) place("gold", 1);
+
+      // 5% chance diamond
+      if (Math.random() < 0.05) place("diamond", 1);
+
+      rooms[key] = obstacles;
+      return obstacles;
+    }
+
+    // Clear current obstacles
+    function clearRoom() {
+      const children = Array.from(gameArea.children);
+      children.forEach(child => {
+        if (child !== box) gameArea.removeChild(child);
+      });
+    }
+
+    // Load room
+    function loadRoom(rx, ry) {
+      clearRoom();
+      generateRoom(rx, ry);
+    }
+
+    // Collision detection
+    function canMove(newX, newY) {
+      const boxRect = {x:newX, y:newY, w:40, h:40};
+      const obstacles = rooms[`${roomX},${roomY}`] || [];
+      for (const obs of obstacles) {
+        const rect = obs.getBoundingClientRect();
+        const areaRect = gameArea.getBoundingClientRect();
+        const ox = rect.left - areaRect.left;
+        const oy = rect.top - areaRect.top;
+        const ow = rect.width;
+        const oh = rect.height;
+        if (boxRect.x < ox + ow &&
+            boxRect.x + boxRect.w > ox &&
+            boxRect.y < oy + oh &&
+            boxRect.y + boxRect.h > oy) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // Initial room
+    loadRoom(roomX, roomY);
+    box.style.left = boxX + "px";
+    box.style.top = boxY + "px";
+
+    document.addEventListener("keydown", (event) => {
+      let newX = boxX;
+      let newY = boxY;
+
+      if (event.key === "ArrowUp") newY -= step;
+      if (event.key === "ArrowDown") newY += step;
+      if (event.key === "ArrowLeft") newX -= step;
+      if (event.key === "ArrowRight") newX += step;
+
+      // Check if off screen
+      if (newX < 0) { roomX--; newX = gameArea.offsetWidth - 40; loadRoom(roomX, roomY); }
+      else if (newX > gameArea.offsetWidth - 40) { roomX++; newX = 0; loadRoom(roomX, roomY); }
+      else if (newY < 0) { roomY--; newY = gameArea.offsetHeight - 40; loadRoom(roomX, roomY); }
+      else if (newY > gameArea.offsetHeight - 40) { roomY++; newY = 0; loadRoom(roomX, roomY); }
+
+      // Collision check
+      if (canMove(newX, newY)) {
+        boxX = newX;
+        boxY = newY;
+        box.style.left = boxX + "px";
+        box.style.top = boxY + "px";
+      }
+    });
+  </script>
 </body>
 </html>
