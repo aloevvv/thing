@@ -669,18 +669,29 @@ function placeFirePit() {
 
     // --- Game World Generation/Persistence ---
     function placeObstacle(type, count, obstacles) {
-      const cfg = resourceConfig[type];
-      for (let i = 0; i < count; i++) {
-        const obs = document.createElement("div");
-        obs.className = type;
-        obs.style.left = Math.floor(Math.random() * (gameArea.offsetWidth - GRID_SIZE)) + "px";
-        obs.style.top = Math.floor(Math.random() * (gameArea.offsetHeight - GRID_SIZE)) + "px";
-        obs.dataset.type = type;
-        obs.dataset.amount = cfg.max;
-        obs.style.backgroundColor = cfg.color;
-        obstacles.push(obs);
-      }
-    }
+  const cfg = resourceConfig[type];
+  const margin = 100; // minimum distance from edges
+
+  for (let i = 0; i < count; i++) {
+    const obs = document.createElement("div");
+    obs.className = type;
+
+    // Clamp spawn area to avoid corners
+    const maxX = gameArea.offsetWidth - GRID_SIZE - margin;
+    const maxY = gameArea.offsetHeight - GRID_SIZE - margin;
+    const ox = Math.floor(Math.random() * (maxX - margin)) + margin;
+    const oy = Math.floor(Math.random() * (maxY - margin)) + margin;
+
+    obs.style.left = ox + "px";
+    obs.style.top = oy + "px";
+    obs.dataset.type = type;
+    obs.dataset.amount = cfg.max;
+    obs.style.backgroundColor = cfg.color;
+
+    obstacles.push(obs);
+  }
+}
+
 
     function createEnemy(type, x, y) {
         const config = enemyConfig[type];
