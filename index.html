@@ -309,7 +309,8 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
     const enemyConfig = {
         wolf: { hp: 200, damage: 10, speed: 30, range: 300, drops: { meat: 1 }, spawnChance: 0.10 },
         bear: { hp: 350, damage: 20, speed: 15, range: 300, drops: { meat: 2, fur: 1 }, spawnChance: 0.10 },
-        fox: { hp: 200, damage: 10, speed: 40, range: 300, drops: { meat: 1 }, spawnChance: 0.10 }
+        fox: { hp: 200, damage: 10, speed: 40, range: 300, drops: { meat: 1 }, spawnChance: 0.10 },
+        polarBear: { hp: 500, damage: 25, speed: 30, range: 400, drops: { meat: 2, fur: 2 }, spawnChance: 0.10 } 
     };
 
     // Crafting Recipes
@@ -692,9 +693,17 @@ function placeFirePit() {
     }
 
     function placeEnemies(enemies) {
+  if (isTundra()) {
+    if (Math.random() < enemyConfig.polarBear.spawnChance) {
+      enemies.push(createEnemy('polarBear',
+        Math.random() * (gameArea.offsetWidth - GRID_SIZE),
+        Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
+    }
+  } else {
         if (Math.random() < enemyConfig.wolf.spawnChance) enemies.push(createEnemy('wolf', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
         if (Math.random() < enemyConfig.bear.spawnChance) enemies.push(createEnemy('bear', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
         if (Math.random() < enemyConfig.fox.spawnChance) enemies.push(createEnemy('fox', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
+    }
     }
     
     function generateRoom(rx, ry) {
@@ -786,6 +795,11 @@ function placeFirePit() {
     let isDay = true;
 let cycleTimer = 0;
 
+    function isTundra() {
+  return roomY >= 30; // tundra starts at y=30
+}
+
+
 function startDayNightCycle() {
   updateDayNightUI();
 
@@ -806,8 +820,13 @@ function startDayNightCycle() {
 
 
 function updateDayNightUI() {
-  document.body.style.backgroundColor = isDay ? "darkgreen" : "#004026";
+  if (isTundra()) {
+    document.body.style.backgroundColor = isDay ? "#c8e3ff" : "#7c8fc4"; // tundra colors
+  } else {
+    document.body.style.backgroundColor = isDay ? "darkgreen" : "#004026"; // forest colors
+  }
 }
+
     function updateTempUI() {
   document.getElementById("temp-value").textContent = player.temp;
   const percent = (player.temp / player.maxTemp) * 100;
@@ -816,31 +835,38 @@ function updateDayNightUI() {
 
 
 setInterval(() => {
-  let loss = isDay ? 2 : 30;
+  let loss;
+  if (isTundra()) {
+    loss = isDay ? 25 : 50; // tundra harsher
+  } else {
+    loss = isDay ? 2 : 30;  // normal biome
+  }
+
   if (!nearFirePit()) {
     player.temp -= loss;
   } else {
-    player.temp += 20; // gain temp near fire pit
+    player.temp += 20;
     if (player.temp > player.maxTemp) player.temp = player.maxTemp;
   }
 
   if (player.temp <= 0) {
-    damagePlayer(10); // freeze damage
+    damagePlayer(10);
     player.temp = 0;
   }
 
   updateTempUI();
-}, 3000); // tick every 3 sec
+}, 3000);
 
 
-    // Hunger depletion loop (45 seconds) and Damage/Regen loop (3 seconds)
+
+  
     setInterval(() => {
         if (player.hunger > 0) {
-            player.hunger -= 10;
+            player.hunger -= 5;
             if (player.hunger < 0) player.hunger = 0;
             updateHungerUI();
         }
-    }, 45000);
+    }, 10000);
 
     setInterval(() => {
         if (player.hunger === 0 && player.hp > 0) {
