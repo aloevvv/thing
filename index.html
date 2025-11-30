@@ -1040,6 +1040,10 @@ let cycleTimer = 0;
     function isTundra() {
   return roomY >= 30; // tundra starts at y=30
 }
+    function isDeepTundra() {
+  return isTundra() && roomY >= 50;
+}
+
 
 
 function startDayNightCycle() {
@@ -1063,11 +1067,16 @@ function startDayNightCycle() {
 
 function updateDayNightUI() {
   if (isTundra()) {
-    document.body.style.backgroundColor = isDay ? "#c8e3ff" : "#7c8fc4"; // tundra colors
+    if (roomY >= 50) {
+      document.body.style.backgroundColor = isDay ? "#56606b" : "#292c65";
+    } else {
+      document.body.style.backgroundColor = isDay ? "#c8e3ff" : "#7c8fc4"; // tundra colors
+    }
   } else {
     document.body.style.backgroundColor = isDay ? "darkgreen" : "#004026"; // forest colors
   }
 }
+
 
     function updateTempUI() {
   document.getElementById("temp-value").textContent = player.temp;
