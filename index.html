@@ -686,20 +686,7 @@ function placeChest() {
     }
   }
   return null;
-}
-
-
-setInterval(() => {
-  const chest = nearChest();
-  const popup = document.getElementById("chestPopup");
-
-  if (chest) {
-    popup.style.display = "flex";
-    updateChestUI(chest);
-  } else {
-    popup.style.display = "none";
-  }
-}, 500);
+    }
 
 
     function updateChestUI(chest) {
@@ -1082,6 +1069,18 @@ setInterval(() => {
       else if (newX > gameArea.offsetWidth - 40) { clearRoom(); roomX++; newX = 0; roomChanged = true; }
       else if (newY < 0) { clearRoom(); roomY--; newY = gameArea.offsetHeight - 40; roomChanged = true; }
       else if (newY > gameArea.offsetHeight - 40) { clearRoom(); roomY++; newY = 0; roomChanged = true; }
+      
+function updateChestPopup() {
+  const chest = nearChest();
+  const popup = document.getElementById("chestPopup");
+
+  if (chest) {
+    popup.style.display = "flex";
+    updateChestUI(chest);
+  } else {
+    popup.style.display = "none";
+  }
+}
 
       if (roomChanged) {
   loadRoom(roomX, roomY);
@@ -1096,6 +1095,7 @@ setInterval(() => {
         box.style.top = boxY + "px";
         // CRITICAL: Update crafting UI as player position changes relative to crafting tables
         updateCraftingUI(); 
+        updateChestPopup();
       }
     });
     inventoryEl.addEventListener('contextmenu', (event) => {
