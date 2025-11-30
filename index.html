@@ -1047,88 +1047,100 @@ document.addEventListener("keydown", (event) => {
     }
   }
 });
-
+  let canPunch = true;
         // Punch Mechanic Handler (Updated to check tool requirement)
     document.addEventListener("keydown", (event) => {
-      if (event.code === "Space") {
-        const obstacles = rooms[`${roomX},${roomY}`].obstacles || [];
-        const enemies = rooms[`${roomX},${roomY}`].enemies || [];
-        let punchDamage = 10; 
-        if (player.equipped.sword && resourceConfig[player.equipped.sword]) punchDamage += resourceConfig[player.equipped.sword].damageBoost;
+  if (event.code === "Space" && canPunch) {
+    canPunch = false; // lock until cooldown finishes
 
-        const checkProximity = (ent) => {
-            const ox = parseInt(ent.style.left); const oy = parseInt(ent.style.top);
-            return Math.abs(boxX - ox) < 70 && Math.abs(boxY - oy) < 70;
-        };
+    const obstacles = rooms[`${roomX},${roomY}`].obstacles || [];
+    const enemies = rooms[`${roomX},${roomY}`].enemies || [];
+    let punchDamage = 10; 
+    if (player.equipped.sword && resourceConfig[player.equipped.sword]) {
+      punchDamage += resourceConfig[player.equipped.sword].damageBoost;
+    }
 
-        let hitSomething = false;
-        // Check obstacles (resources)
-        for (const obs of obstacles) {
-          if (checkProximity(obs)) { 
-            const resourceType = obs.dataset.type;
-            const resourceConfigEntry = resourceConfig[resourceType];
-            const requiredToolName = resourceConfigEntry.toolNeeded;
-            let canHarvest = true;
-            let equippedLevel = 0; // Bare hands have a harvest level of 0
+    const checkProximity = (ent) => {
+      const ox = parseInt(ent.style.left);
+      const oy = parseInt(ent.style.top);
+      return Math.abs(boxX - ox) < 70 && Math.abs(boxY - oy) < 70;
+    };
 
-            // Determine equipped tool level
-            if (player.equipped.pickaxe && resourceConfig[player.equipped.pickaxe]) {
-                equippedLevel = resourceConfig[player.equipped.pickaxe].harvestLevel || 0;
-            }
+    let hitSomething = false;
 
-            if (requiredToolName) {
-                // If a tool is required, get its level.
-                const requiredLevel = resourceConfig[requiredToolName].harvestLevel || 99;
+    // --- obstacle harvesting logic (unchanged) ---
+    for (const obs of obstacles) {
+      if (checkProximity(obs)) { 
+        const resourceType = obs.dataset.type;
+        const resourceConfigEntry = resourceConfig[resourceType];
+        const requiredToolName = resourceConfigEntry.toolNeeded;
+        let canHarvest = true;
+        let equippedLevel = 0;
 
-                // Compare levels
-                if (equippedLevel < requiredLevel) {
-                    canHarvest = false;
-                    if (equippedLevel === 0) {
-                        logMessage(`You need a ${requiredToolName} to mine ${resourceType}!`);
-                    } else {
-                        logMessage(`Your ${player.equipped.pickaxe} isn't strong enough!`);
-                    }
-                }
-            }
-            
-            if (canHarvest) {
-                let amt = parseInt(obs.dataset.amount);
-                if (amt > 0) {
-                  obs.dataset.amount = amt - 1;
-                  collectResource(obs.dataset.type, 1);
-                  hitSomething = true;
-                  break; // Only hit one thing
-                }
+        if (player.equipped.pickaxe && resourceConfig[player.equipped.pickaxe]) {
+          equippedLevel = resourceConfig[player.equipped.pickaxe].harvestLevel || 0;
+        }
+
+        if (requiredToolName) {
+          const requiredLevel = resourceConfig[requiredToolName].harvestLevel || 99;
+          if (equippedLevel < requiredLevel) {
+            canHarvest = false;
+            if (equippedLevel === 0) {
+              logMessage(`You need a ${requiredToolName} to mine ${resourceType}!`);
+            } else {
+              logMessage(`Your ${player.equipped.pickaxe} isn't strong enough!`);
             }
           }
         }
-
-if (player.equipped.pickaxe === 'shovel') {
-  // Always collect dirt
-  collectResource('dirt', 1);
-
-  // 2% chance for wheat seed
-  if (Math.random() < 0.02) {
-    collectResource('wheat-seed', 1);
-    logMessage("You found a wheat seed!");
-  }
-  hitSomething = true; // counts as an action
-}
-
-        if (!hitSomething) {
-            // Check enemies (same as before)
-            for (const enemy of enemies) {
-                if (enemy.dataset.hp <= 0 || enemy.parentNode !== gameArea) continue;
-                if (checkProximity(enemy)) {
-                    let hp = parseInt(enemy.dataset.hp); hp -= punchDamage; enemy.dataset.hp = hp; enemy.textContent = `${enemy.dataset.type} (${hp})`;
-                    if (hp <= 0) { gameArea.removeChild(enemy); const drops = enemyConfig[enemy.dataset.type].drops; for (const dropType in drops) collectResource(dropType, drops[dropType]); logMessage(`${enemy.dataset.type} defeated!`); }
-                    else { logMessage(`Dealt ${punchDamage} damage to ${enemy.dataset.type}.`); }
-                    break;
-                }
-            }
+        
+        if (canHarvest) {
+          let amt = parseInt(obs.dataset.amount);
+          if (amt > 0) {
+            obs.dataset.amount = amt - 1;
+            collectResource(obs.dataset.type, 1);
+            hitSomething = true;
+            break;
+          }
         }
       }
-    });
+    }
+
+    if (player.equipped.pickaxe === 'shovel') {
+      collectResource('dirt', 1);
+      if (Math.random() < 0.02) {
+        collectResource('wheat-seed', 1);
+        logMessage("You found a wheat seed!");
+      }
+      hitSomething = true;
+    }
+
+    if (!hitSomething) {
+      for (const enemy of enemies) {
+        if (enemy.dataset.hp <= 0 || enemy.parentNode !== gameArea) continue;
+        if (checkProximity(enemy)) {
+          let hp = parseInt(enemy.dataset.hp);
+          hp -= punchDamage;
+          enemy.dataset.hp = hp;
+          enemy.textContent = `${enemy.dataset.type} (${hp})`;
+          if (hp <= 0) {
+            gameArea.removeChild(enemy);
+            const drops = enemyConfig[enemy.dataset.type].drops;
+            for (const dropType in drops) collectResource(dropType, drops[dropType]);
+            logMessage(`${enemy.dataset.type} defeated!`);
+          } else {
+            logMessage(`Dealt ${punchDamage} damage to ${enemy.dataset.type}.`);
+          }
+          break;
+        }
+      }
+    }
+
+    // --- cooldown reset ---
+    setTimeout(() => {
+      canPunch = true;
+    }, 50); // 0.05 seconds
+  }
+});
     startDayNightCycle();
   </script>
 </body>
