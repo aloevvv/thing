@@ -1322,6 +1322,32 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+    document.addEventListener("keydown", (event) => {
+  // Check if key is 1–9
+  if (event.code.startsWith("Digit")) {
+    const num = parseInt(event.code.replace("Digit", ""), 10);
+    if (num >= 1 && num <= 9) {
+      const slotIndex = num - 1; // convert to 0-based index
+      const slots = inventoryEl.children;
+      const slot = slots[slotIndex];
+      if (slot && slot.dataset.type) {
+        const itemType = slot.dataset.type;
+        const config = resourceConfig[itemType];
+
+        // If it's equippable, toggle equip
+        if (config && config.equip) {
+          toggleEquip(itemType, config.equip);
+        }
+        // If it's food, eat it
+        else if (config && config.type === "food") {
+          eatItem(itemType);
+        }
+      }
+    }
+  }
+});
+
+
 
 document.addEventListener("keydown", (event) => {
   if (event.code === "KeyX") {
