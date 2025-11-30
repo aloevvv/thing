@@ -642,12 +642,7 @@ function placeFirePit() {
             updateInventoryUI();
         }
     }
-    inventoryEl.addEventListener('click', (event) => {
-        const clickedSlot = event.target.closest('.inv-slot');
-        if (clickedSlot && clickedSlot.dataset.type) {
-            eatItem(clickedSlot.dataset.type);
-        }
-    });
+    
    function collectResource(type, amount) {
   // If resource already exists, just add
   if (player.inventory[type]) {
