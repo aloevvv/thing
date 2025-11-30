@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Procedural Room Game</title>
+  <title>Adventuror</title>
   <style>
     body {
       margin: 0;
@@ -101,9 +101,6 @@
   background-color: red; 
   box-shadow: 0 0 10px red;
 }
-    .popup-hidden {
-    display: none !important; 
-  }
 
 
     /* Enemy styles */
@@ -225,15 +222,26 @@
     <div id="inventory"></div>
   </div>
 
-  <div id="chestPopup" class="popup-hidden" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background-color: rgba(0,0,0,0.7); border: 2px solid white; padding: 10px; width: 200px; display: flex; justify-content: space-around;">
-
+  <div id="chestPopup" style="
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  background-color: rgba(0,0,0,0.7);
+  border: 2px solid white;
+  padding: 10px;
+  width: 200px;
+  display: flex;
+  justify-content: space-around;
+">
   <div class="chest-slot" data-index="0"></div>
   <div class="chest-slot" data-index="1"></div>
   <div class="chest-slot" data-index="2"></div>
 </div>
 
   
-  <div id="controlsPopup" class="popup-hidden">
+  <div id="controlsPopup">
   <h2>Controls</h2>
   <ul>
     <li>Arrow keys → Move</li>
@@ -684,11 +692,11 @@ setInterval(() => {
   const chest = nearChest();
   const popup = document.getElementById("chestPopup");
   if (chest) {
-  popup.classList.remove("popup-hidden");
-  updateChestUI(chest);
-} else {
-  popup.classList.add("popup-hidden");
-}
+    popup.style.display = "flex";
+    updateChestUI(chest);
+  } else {
+    popup.style.display = "none";
+  }
 }, 500);
 
     function updateChestUI(chest) {
@@ -1105,11 +1113,11 @@ setInterval(() => {
 document.addEventListener("keydown", (event) => {
   if (event.code === "KeyQ") {
     // Toggle popup visibility
-    if (controlsPopup.classList.contains("popup-hidden")) {
-  controlsPopup.classList.remove("popup-hidden");
-} else {
-  controlsPopup.classList.add("popup-hidden");
-}
+    if (controlsPopup.style.display === "none" || controlsPopup.style.display === "") {
+      controlsPopup.style.display = "block";
+    } else {
+      controlsPopup.style.display = "none";
+    }
   }
 });
 
