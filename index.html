@@ -324,18 +324,7 @@
 
     import { get, child } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
-let playerKey = null;
 
-// At startup, check if player1 exists
-get(child(ref(db), "players/player1")).then(snapshot => {
-  if (!snapshot.exists()) {
-    playerKey = "player1";
-    set(ref(db, "players/player1"), { x: boxX, y: boxY });
-  } else {
-    playerKey = "player2";
-    set(ref(db, "players/player2"), { x: boxX, y: boxY });
-  }
-});
 
 
 
@@ -1305,7 +1294,19 @@ setInterval(() => {
         });
     }, 3000);
 
+  let playerKey = null;
 
+// At startup, check if player1 exists
+get(child(ref(db), "players/player1")).then(snapshot => {
+  if (!snapshot.exists()) {
+    playerKey = "player1";
+    set(ref(db, "players/player1"), { x: boxX, y: boxY });
+  } else {
+    playerKey = "player2";
+    set(ref(db, "players/player2"), { x: boxX, y: boxY });
+  }
+});
+    
     // Movement Handler - Added updateCraftingUI call here
     document.addEventListener("keydown", (event) => {
       let newX = boxX;
@@ -1345,7 +1346,9 @@ setInterval(() => {
         boxY = newY;
         box.style.left = boxX + "px";
         box.style.top = boxY + "px";
-        set(ref(db, `players/${playerKey}`), { x: boxX, y: boxY });
+       if (playerKey) {
+  set(ref(db, `players/${playerKey}`), { x: boxX, y: boxY });
+}
         // CRITICAL: Update crafting UI as player position changes relative to crafting tables
         updateCraftingUI();
 
