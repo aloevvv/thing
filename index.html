@@ -284,9 +284,6 @@
       <div class="chest-slot" data-index="2"></div>
     </div>
   </div>
-
-  <div id="player2Box" style="position:absolute;width:40px;height:40px;background-color:#c6e1ff;"></div>
-
   
   <div id="controlsPopup">
   <h2>Controls</h2>
@@ -300,34 +297,8 @@
   </ul>
 </div>
 
-  <script type="module">
-  // --- Firebase imports ---
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
-  // --- Firebase setup ---
-
- const firebaseConfig = {
-    apiKey: "AIzaSyCQJLa3b7JpLB3p39f_pCYYiYxMAHZdDF8",
-    authDomain: "multiplayer-starve.firebaseapp.com",
-    databaseURL: "https://multiplayer-starve-default-rtdb.firebaseio.com",
-    projectId: "multiplayer-starve",
-    storageBucket: "multiplayer-starve.firebasestorage.app",
-    messagingSenderId: "829359510046",
-    appId: "1:829359510046:web:a0776977814071f752140f",
-    measurementId: "G-1ELGX9B3L4"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-    import { get, child } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
-
-
-
-
-
+  <script>
         // --- DOM ELEMENT REFERENCES ---
     const gameArea = document.getElementById("gameArea");
     const box = document.getElementById("box");
@@ -338,24 +309,6 @@
     const hpValueEl = document.getElementById("hp-value"); 
     const hungerFillEl = document.getElementById("hunger-fill");
     const hungerValueEl = document.getElementById("hunger-value");
-
-    onValue(ref(db, "players/player1"), snapshot => {
-  const data = snapshot.val();
-  if (data) {
-    box.style.left = data.x + "px";
-    box.style.top = data.y + "px";
-  }
-});
-
-onValue(ref(db, "players/player2"), snapshot => {
-  const data = snapshot.val();
-  if (data) {
-    const p2Box = document.getElementById("player2Box");
-    p2Box.style.left = data.x + "px";
-    p2Box.style.top = data.y + "px";
-  }
-});
-
     
     // --- CONFIGS AND STATE  ---
     const step = 20; 
@@ -1294,19 +1247,7 @@ setInterval(() => {
         });
     }, 3000);
 
-  let playerKey = null;
 
-// At startup, check if player1 exists
-get(child(ref(db), "players/player1")).then(snapshot => {
-  if (!snapshot.exists()) {
-    playerKey = "player1";
-    set(ref(db, "players/player1"), { x: boxX, y: boxY });
-  } else {
-    playerKey = "player2";
-    set(ref(db, "players/player2"), { x: boxX, y: boxY });
-  }
-});
-    
     // Movement Handler - Added updateCraftingUI call here
     document.addEventListener("keydown", (event) => {
       let newX = boxX;
@@ -1346,9 +1287,6 @@ get(child(ref(db), "players/player1")).then(snapshot => {
         boxY = newY;
         box.style.left = boxX + "px";
         box.style.top = boxY + "px";
-       if (playerKey) {
-  set(ref(db, `players/${playerKey}`), { x: boxX, y: boxY });
-}
         // CRITICAL: Update crafting UI as player position changes relative to crafting tables
         updateCraftingUI();
 
@@ -1526,29 +1464,6 @@ if (player.equipped.pickaxe === 'shovel') {
       }
     });
     startDayNightCycle();
-
-    function updatePlayer1(x, y) {
-    set(ref(db, "players/player1"), { x, y });
-  }
-  function updatePlayer2(x, y) {
-    set(ref(db, "players/player2"), { x, y });
-  }
-
-  onValue(ref(db, "players/player1"), snap => {
-    const data = snap.val();
-    if (data) {
-      document.getElementById("player1Box").style.left = data.x + "px";
-      document.getElementById("player1Box").style.top = data.y + "px";
-    }
-  });
-
-  onValue(ref(db, "players/player2"), snap => {
-    const data = snap.val();
-    if (data) {
-      document.getElementById("player2Box").style.left = data.x + "px";
-      document.getElementById("player2Box").style.top = data.y + "px";
-    }
-  });
-</script>
+  </script>
 </body>
 </html>
