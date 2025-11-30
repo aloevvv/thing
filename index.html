@@ -356,7 +356,7 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
         'gold-helm': { costs: { rock: 50, gold: 60 }, requiresTable: true },
         'diamond-axe': { costs: { tree: 60, diamond: 50 }, requiresTable: true },
         'diamond-sword': { costs: { rock: 50, gold: 40, diamond: 60 }, requiresTable: true },
-        'diamond-helmet': { costs: { rock: 60, gold: 50, diamond: 70 }, requiresTable: true },
+        'diamond-helm': { costs: { rock: 60, gold: 50, diamond: 70 }, requiresTable: true },
         'backpack': { costs: { tree: 5 }, requiresTable: true },
         'plot': { costs: { tree: 20, dirt: 60 }, requiresTable: true },
         'bread': { costs: { wheat: 3 }, requiresFurnace: true },
@@ -509,7 +509,7 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
       // Player takes item from chest
       collectResource(itemInSlot.type, itemInSlot.count);
       items[slotIndex] = null; // Remove from chest
-      activeChest.dataset.items = JSON.stringify(items.filter(i => i !== null));
+      activeChest.dataset.items = JSON.stringify(items);
       updateChestUI();
     }
   }
