@@ -561,13 +561,20 @@ function placeFirePit() {
 
  
   pit.addEventListener("click", () => {
-    const treesToUse = parseInt(prompt("How many trees to fuel the pit?"), 10);
-    if (player.inventory['tree'] >= treesToUse) {
-      player.inventory['tree'] -= treesToUse;
-      pit.dataset.fuel = parseInt(pit.dataset.fuel) + treesToUse;
-      updateInventoryUI();
-    }
-  });
+  let treesToUse = parseInt(prompt("How many trees to fuel the pit?"), 10);
+
+  // Clamp negative values to 0
+  if (isNaN(treesToUse) || treesToUse < 0) {
+    treesToUse = 0;
+  }
+
+  if (player.inventory['tree'] >= treesToUse) {
+    player.inventory['tree'] -= treesToUse;
+    pit.dataset.fuel = parseInt(pit.dataset.fuel) + treesToUse;
+    updateInventoryUI();
+  }
+});
+
 
   // burn loop
   setInterval(() => {
