@@ -1054,22 +1054,9 @@ setInterval(() => {
 
 
     // Movement Handler - Added updateCraftingUI call here
-    document.addEventListener("keydown", (event) => {
-      let newX = boxX;
-      let newY = boxY;
-      let roomChanged = false;
+   
+   
 
-      if (event.key === "ArrowUp") newY -= step;
-      else if (event.key === "ArrowDown") newY += step;
-      else if (event.key === "ArrowLeft") newX -= step;
-      else if (event.key === "ArrowRight") newX += step;
-      else if (event.code !== "Space") return;
-
-      if (newX < 0) { clearRoom(); roomX--; newX = gameArea.offsetWidth - 40; roomChanged = true; }
-      else if (newX > gameArea.offsetWidth - 40) { clearRoom(); roomX++; newX = 0; roomChanged = true; }
-      else if (newY < 0) { clearRoom(); roomY--; newY = gameArea.offsetHeight - 40; roomChanged = true; }
-      else if (newY > gameArea.offsetHeight - 40) { clearRoom(); roomY++; newY = 0; roomChanged = true; }
-      
 function updateChestPopup() {
   const chest = nearChest();
   const popup = document.getElementById("chestPopup");
@@ -1082,22 +1069,34 @@ function updateChestPopup() {
   }
 }
 
-      if (roomChanged) {
-  loadRoom(roomX, roomY);
-  updateCoordDisplay();
-  updateDayNightUI();
-}
+// Arrow‑key movement handler
+document.addEventListener("keydown", (event) => {
+  let newX = boxX;
+  let newY = boxY;
+  let roomChanged = false;
 
-      if (canMovePlayer(newX, newY)) {
-        boxX = newX;
-        boxY = newY;
-        box.style.left = boxX + "px";
-        box.style.top = boxY + "px";
-        // CRITICAL: Update crafting UI as player position changes relative to crafting tables
-        updateCraftingUI(); 
-        updateChestPopup();
-      }
-    });
+  if (event.key === "ArrowUp") newY -= step;
+  else if (event.key === "ArrowDown") newY += step;
+  else if (event.key === "ArrowLeft") newX -= step;
+  else if (event.key === "ArrowRight") newX += step;
+  else if (event.code !== "Space") return;
+
+  // room change logic...
+  if (roomChanged) {
+    loadRoom(roomX, roomY);
+    updateCoordDisplay();
+    updateDayNightUI();
+  }
+
+  if (canMovePlayer(newX, newY)) {
+    boxX = newX;
+    boxY = newY;
+    box.style.left = boxX + "px";
+    box.style.top = boxY + "px";
+    updateCraftingUI();
+    updateChestPopup();
+  }
+});
     inventoryEl.addEventListener('contextmenu', (event) => {
   event.preventDefault(); // Prevent browser menu
   const clickedSlot = event.target.closest('.inv-slot');
