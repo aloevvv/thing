@@ -55,6 +55,8 @@
     .rock { background-color: gray; }
     .gold { background-color: gold; }
     .diamond { background-color: cyan; }
+    .crystal { background-color: violet; }
+
     .berrybush { background-color: darkred; border-radius: 50%; }
     .craftingtable { background-color: #8b4513; border: 2px solid #5c2e0d; } /* Brown table */
     .plot {
@@ -345,8 +347,9 @@ const chestSlotsEl = document.getElementById("chestSlots");
     const resourceConfig = {
   tree: { max: 30, regen: 5000, color: 'green', type: 'material' },
   rock: { max: 20, regen: 10000, color: 'gray', type: 'material', toolNeeded: 'w-pickaxe' },
-  gold: { max: 10, regen: 20000, color: 'gold', type: 'material', toolNeeded: 'stone-axe' },
-  diamond: { max: 10, regen: 20000, color: 'cyan', type: 'material', toolNeeded: 'gold-axe' },
+  gold: { max: 10, regen: 20000, color: 'gold', type: 'material', toolNeeded: 'stone-pickaxe' },
+  diamond: { max: 10, regen: 20000, color: 'cyan', type: 'material', toolNeeded: 'gold-pickaxe' },
+  crystal: { max: 10, regen: 30000, color: 'violet', type: 'material', toolNeeded: 'diamond-pickaxe' },
   berrybush: { max: 6, regen: 8000, color: 'darkred', type: 'food', foodValue: 10 }
 };
     // Add new items and their colors
@@ -359,14 +362,14 @@ const chestSlotsEl = document.getElementById("chestSlots");
     resourceConfig['furnace'] = { color: '#444', type: 'placeable' };
     resourceConfig['firepit'] = { color: '#444', type: 'placeable' };
     resourceConfig['chest'] = { color: '#ad7200', type: 'placeable' };
-    resourceConfig['stone-axe'] = { color: '#7f7f7f', type: 'tool', equip: 'pickaxe', harvestLevel: 2 };
+    resourceConfig['stone-pickaxe'] = { color: '#7f7f7f', type: 'tool', equip: 'pickaxe', harvestLevel: 2 };
     resourceConfig['stone-sword'] = { color: '#7f7f7f', type: 'weapon', equip: 'sword', damageBoost: 10 };
     resourceConfig['stone-helm'] = { color: '#7f7f7f', type: 'armor', equip: 'helmet', defense: 2 };
-    resourceConfig['gold-axe'] = { color: 'gold', type: 'tool', equip: 'pickaxe', harvestLevel: 3 };
+    resourceConfig['gold-pickaxe'] = { color: 'gold', type: 'tool', equip: 'pickaxe', harvestLevel: 3 };
     resourceConfig['gold-sword'] = { color: 'gold', type: 'weapon', equip: 'sword', damageBoost: 15 };
     resourceConfig['gold-helm'] = { color: 'gold', type: 'armor', equip: 'helmet', defense: 3 };
     resourceConfig['feather-coat'] = { color: 'white', type: 'armor', equip: 'helmet', defense: 0, warmthProfile: { normalDay: 0, normalNight: 10, tundraDay: 10, tundraNight: 30 } };
-    resourceConfig['diamond-axe'] = { color: 'cyan', type: 'tool', equip: 'pickaxe', harvestLevel: 4 };
+    resourceConfig['diamond-pickaxe'] = { color: 'cyan', type: 'tool', equip: 'pickaxe', harvestLevel: 4 };
     resourceConfig['diamond-sword'] = { color: 'cyan', type: 'weapon', equip: 'sword', damageBoost: 20 };
     resourceConfig['diamond-helm'] = { color: 'cyan', type: 'armor', equip: 'helmet', defense: 4 };
     resourceConfig['craftingtable'] = { color: '#8b4513', type: 'placeable' };
@@ -404,16 +407,16 @@ resourceConfig['feather'] = { color: '#e6d9c1', type: 'material' };
         'craftingtable': { costs: { tree: 30 }, requiresTable: false },
         'furnace': { costs: { rock: 45 }, requiresTable: true },
         'firepit': { costs: { tree: 60, rock: 30 }, requiresTable: true },
-        'stone-axe': { costs: { tree: 40, rock: 30 }, requiresTable: true },
+        'stone-pickaxe': { costs: { tree: 40, rock: 30 }, requiresTable: true },
         'shovel': { costs: { tree: 30, rock: 30 }, requiresTable: true },
         'stone-sword': { costs: { tree: 50, rock: 40 }, requiresTable: true },
         'stone-helm': { costs: { tree: 30, rock: 75 }, requiresTable: true },
-        'gold-axe': { costs: { tree: 50, gold: 40 }, requiresTable: true },
+        'gold-pickaxe': { costs: { tree: 50, gold: 40 }, requiresTable: true },
         'gold-sword': { costs: { tree: 50, rock: 40, gold: 50 }, requiresTable: true },
         'chest': { costs: { tree: 75, gold: 10 }, requiresTable: true },
         'gold-helm': { costs: { rock: 50, gold: 60 }, requiresTable: true },
         'feather-coat': { costs: { rock: 1 }, requiresTable: true },
-        'diamond-axe': { costs: { tree: 60, diamond: 50 }, requiresTable: true },
+        'diamond-pickaxe': { costs: { tree: 60, diamond: 50 }, requiresTable: true },
         'diamond-sword': { costs: { rock: 50, gold: 40, diamond: 60 }, requiresTable: true },
         'diamond-helm': { costs: { rock: 60, gold: 50, diamond: 70 }, requiresTable: true },
         'backpack': { costs: { tree: 5 }, requiresTable: true },
@@ -943,9 +946,15 @@ function placeChest() {
   placeObstacle("tree", Math.floor(Math.random() * 3) + 2, roomData.obstacles);
   placeObstacle("rock", Math.floor(Math.random() * 2) + 1, roomData.obstacles);
   if (Math.random() < 0.25) placeObstacle("gold", 1, roomData.obstacles);
-  if (Math.random() < 0.05) placeObstacle("diamond", 1, roomData.obstacles);
-  placeObstacle("berrybush", Math.floor(Math.random() * 3) + 1, roomData.obstacles);
 
+  if (isTundra()) {
+    if (Math.random() < 0.25) placeObstacle("diamond", 1, roomData.obstacles);
+    if (Math.random() < 0.07) placeObstacle("crystal", 1, roomData.obstacles);
+  } else {
+    if (Math.random() < 0.05) placeObstacle("diamond", 1, roomData.obstacles); 
+  }
+
+  placeObstacle("berrybush", Math.floor(Math.random() * 3) + 1, roomData.obstacles);
   placeEnemies(roomData.enemies);
 
   if (isDeepTundra()) {
