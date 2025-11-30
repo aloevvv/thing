@@ -912,7 +912,6 @@ function placeChest() {
       Math.random() * (gameArea.offsetWidth - GRID_SIZE),
       Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
   }
-}
   } else {
         if (Math.random() < enemyConfig.wolf.spawnChance) enemies.push(createEnemy('wolf', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
         if (Math.random() < enemyConfig.bear.spawnChance) enemies.push(createEnemy('bear', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
