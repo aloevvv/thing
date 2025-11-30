@@ -688,9 +688,11 @@ function placeChest() {
   return null;
 }
 
+
 setInterval(() => {
   const chest = nearChest();
   const popup = document.getElementById("chestPopup");
+
   if (chest) {
     popup.style.display = "flex";
     updateChestUI(chest);
@@ -698,6 +700,7 @@ setInterval(() => {
     popup.style.display = "none";
   }
 }, 500);
+
 
     function updateChestUI(chest) {
   const contents = JSON.parse(chest.dataset.contents);
