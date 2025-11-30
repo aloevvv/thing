@@ -888,6 +888,18 @@ function placeChest() {
   }
 }
 
+    function placeBottomWall(obstacles) {
+  const wall = document.createElement("div");
+  wall.className = "rock"; // reuse rock style or make a new .wall style
+  wall.style.left = "0px";
+  wall.style.top = (gameArea.offsetHeight - GRID_SIZE) + "px";
+  wall.style.width = gameArea.offsetWidth + "px";
+  wall.style.height = GRID_SIZE + "px";
+  wall.dataset.type = "wall";
+  obstacles.push(wall);
+  gameArea.appendChild(wall);
+}
+
 
     function createEnemy(type, x, y) {
         const config = enemyConfig[type];
@@ -922,18 +934,27 @@ function placeChest() {
     }
     
     function generateRoom(rx, ry) {
-      const key = `${rx},${ry}`;
-      if (rooms[key]) return rooms[key];
-      const roomData = { obstacles: [], enemies: [], intervals: [] };
-      placeObstacle("tree", Math.floor(Math.random() * 3) + 2, roomData.obstacles);
-      placeObstacle("rock", Math.floor(Math.random() * 2) + 1, roomData.obstacles);
-      if (Math.random() < 0.25) placeObstacle("gold", 1, roomData.obstacles);
-      if (Math.random() < 0.05) placeObstacle("diamond", 1, roomData.obstacles);
-      placeObstacle("berrybush", Math.floor(Math.random() * 3) + 1, roomData.obstacles);
-      placeEnemies(roomData.enemies);
-      rooms[key] = roomData;
-      return roomData;
-    }
+  const key = `${rx},${ry}`;
+  if (rooms[key]) return rooms[key];
+
+  const roomData = { obstacles: [], enemies: [], intervals: [] };
+
+  placeObstacle("tree", Math.floor(Math.random() * 3) + 2, roomData.obstacles);
+  placeObstacle("rock", Math.floor(Math.random() * 2) + 1, roomData.obstacles);
+  if (Math.random() < 0.25) placeObstacle("gold", 1, roomData.obstacles);
+  if (Math.random() < 0.05) placeObstacle("diamond", 1, roomData.obstacles);
+  placeObstacle("berrybush", Math.floor(Math.random() * 3) + 1, roomData.obstacles);
+
+  placeEnemies(roomData.enemies);
+
+  if (isDeepTundra()) {
+    placeBottomWall(roomData.obstacles);
+  }
+
+  rooms[key] = roomData;
+  return roomData;
+}
+
     function clearRoom() {
       const key = `${roomX},${roomY}`;
       const currentRoomData = rooms[key];
