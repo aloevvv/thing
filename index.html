@@ -101,6 +101,9 @@
   background-color: red; 
   box-shadow: 0 0 10px red;
 }
+    .popup-hidden {
+    display: none !important; 
+  }
 
 
     /* Enemy styles */
@@ -222,26 +225,15 @@
     <div id="inventory"></div>
   </div>
 
-  <div id="chestPopup" style="
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: none;
-  background-color: rgba(0,0,0,0.7);
-  border: 2px solid white;
-  padding: 10px;
-  width: 200px;
-  display: flex;
-  justify-content: space-around;
-">
+  <div id="chestPopup" class="popup-hidden" style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background-color: rgba(0,0,0,0.7); border: 2px solid white; padding: 10px; width: 200px; display: flex; justify-content: space-around;">
+
   <div class="chest-slot" data-index="0"></div>
   <div class="chest-slot" data-index="1"></div>
   <div class="chest-slot" data-index="2"></div>
 </div>
 
   
-  <div id="controlsPopup">
+  <div id="controlsPopup" class="popup-hidden">
   <h2>Controls</h2>
   <ul>
     <li>Arrow keys → Move</li>
@@ -692,11 +684,11 @@ setInterval(() => {
   const chest = nearChest();
   const popup = document.getElementById("chestPopup");
   if (chest) {
-    popup.style.display = "flex";
-    updateChestUI(chest);
-  } else {
-    popup.style.display = "none";
-  }
+  popup.classList.remove("popup-hidden");
+  updateChestUI(chest);
+} else {
+  popup.classList.add("popup-hidden");
+}
 }, 500);
 
     function updateChestUI(chest) {
@@ -1113,11 +1105,11 @@ setInterval(() => {
 document.addEventListener("keydown", (event) => {
   if (event.code === "KeyQ") {
     // Toggle popup visibility
-    if (controlsPopup.style.display === "none" || controlsPopup.style.display === "") {
-      controlsPopup.style.display = "block";
-    } else {
-      controlsPopup.style.display = "none";
-    }
+    if (controlsPopup.classList.contains("popup-hidden")) {
+  controlsPopup.classList.remove("popup-hidden");
+} else {
+  controlsPopup.classList.add("popup-hidden");
+}
   }
 });
 
