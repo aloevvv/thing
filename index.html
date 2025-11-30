@@ -174,6 +174,7 @@
     .bear { background-color: black; }
     .fox { background-color: orange; }
     .polarBear { background-color: white; }
+    .penguin { background-color: black; }
 
     /* UI Overlay and Inventory styles remain the same */
     #uiContainer { display: flex; flex-direction: column; width: 600px; }
@@ -381,6 +382,8 @@ resourceConfig['backpack'] = { color: '#853c16', type: 'material' };
 resourceConfig['plot'] = { color: '#654321', type: 'placeable' };
 resourceConfig['bread'] = { color: '#bc7f2e', type: 'food', foodValue: 30 };
 resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 };
+resourceConfig['feather'] = { color: '#e6d9c1', type: 'material' };
+
 
 
 
@@ -388,7 +391,8 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
         wolf: { hp: 200, damage: 10, speed: 30, range: 300, drops: { meat: 1 }, spawnChance: 0.10 },
         bear: { hp: 350, damage: 20, speed: 15, range: 300, drops: { meat: 2, fur: 1 }, spawnChance: 0.10 },
         fox: { hp: 200, damage: 10, speed: 40, range: 300, drops: { meat: 1 }, spawnChance: 0.10 },
-        polarBear: { hp: 500, damage: 25, speed: 30, range: 400, drops: { meat: 2, fur: 2 }, spawnChance: 0.10 } 
+        polarBear: { hp: 500, damage: 25, speed: 30, range: 400, drops: { meat: 2, fur: 2 }, spawnChance: 0.10 },
+        penguin: { hp: 175, damage: 0, speed: 50, range: 0, drops: { meat: 1, feather: 2 }, spawnChance: 0.15 }
     };
 
     // Crafting Recipes
@@ -898,11 +902,17 @@ function placeChest() {
 
     function placeEnemies(enemies) {
   if (isTundra()) {
-    if (Math.random() < enemyConfig.polarBear.spawnChance) {
-      enemies.push(createEnemy('polarBear',
-        Math.random() * (gameArea.offsetWidth - GRID_SIZE),
-        Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
-    }
+  if (Math.random() < enemyConfig.polarBear.spawnChance) {
+    enemies.push(createEnemy('polarBear',
+      Math.random() * (gameArea.offsetWidth - GRID_SIZE),
+      Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
+  }
+  if (Math.random() < enemyConfig.penguin.spawnChance) {
+    enemies.push(createEnemy('penguin',
+      Math.random() * (gameArea.offsetWidth - GRID_SIZE),
+      Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
+  }
+}
   } else {
         if (Math.random() < enemyConfig.wolf.spawnChance) enemies.push(createEnemy('wolf', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
         if (Math.random() < enemyConfig.bear.spawnChance) enemies.push(createEnemy('bear', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
@@ -980,6 +990,33 @@ function placeChest() {
     function updateCoordDisplay() {
   document.getElementById("coordDisplay").textContent = `${roomX},${roomY}`;
 }
+
+    function movePenguin(enemyEl) {
+  const directions = ['up','down','left','right'];
+  const dir = directions[Math.floor(Math.random() * directions.length)];
+  const distance = 100 + Math.floor(Math.random() * 50); // 100–150px
+
+  let newX = parseInt(enemyEl.style.left);
+  let newY = parseInt(enemyEl.style.top);
+
+  if (dir === 'up') newY -= distance;
+  if (dir === 'down') newY += distance;
+  if (dir === 'left') newX -= distance;
+  if (dir === 'right') newX += distance;
+
+  // Clamp to game area
+  newX = Math.max(0, Math.min(gameArea.offsetWidth - GRID_SIZE, newX));
+  newY = Math.max(0, Math.min(gameArea.offsetHeight - GRID_SIZE, newY));
+
+  enemyEl.style.left = newX + "px";
+  enemyEl.style.top = newY + "px";
+}
+
+// Run movement loop
+setInterval(() => {
+  const penguins = document.querySelectorAll('.penguin');
+  penguins.forEach(p => movePenguin(p));
+}, 2000); // every 2 seconds
 
 
     function canMovePlayer(newX, newY) {
@@ -1128,6 +1165,41 @@ setInterval(() => {
             }
         });
     }, 500);
+
+    // Penguin wandering loop (every 2 seconds)
+setInterval(() => {
+    const currentRoomData = rooms[`${roomX},${roomY}`];
+    if (!currentRoomData) return;
+
+    currentRoomData.enemies.forEach(enemy => {
+        if (enemy.dataset.type !== "penguin") return;
+        if (enemy.dataset.hp <= 0 || enemy.parentNode !== gameArea) return;
+
+        const eX = parseInt(enemy.style.left);
+        const eY = parseInt(enemy.style.top);
+
+        // Pick random direction + distance
+        const directions = ["up","down","left","right"];
+        const dir = directions[Math.floor(Math.random() * directions.length)];
+        const distance = 100 + Math.floor(Math.random() * 50); // 100–150px
+
+        let newEX = eX;
+        let newEY = eY;
+        if (dir === "up") newEY -= distance;
+        if (dir === "down") newEY += distance;
+        if (dir === "left") newEX -= distance;
+        if (dir === "right") newEX += distance;
+
+        // Clamp to game area
+        newEX = Math.max(0, Math.min(gameArea.offsetWidth - GRID_SIZE, newEX));
+        newEY = Math.max(0, Math.min(gameArea.offsetHeight - GRID_SIZE, newEY));
+
+        // Move penguin
+        enemy.style.left = newEX + "px";
+        enemy.style.top = newEY + "px";
+    });
+}, 2000);
+
 
     // Enemy Attack loop (Every 3 seconds, calls damagePlayer)
     setInterval(() => {
