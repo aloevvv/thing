@@ -88,6 +88,59 @@
   border: 2px solid #000000;      
   box-sizing: border-box;
 }
+    #chestPopup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: saddlebrown;
+  color: white;
+  padding: 20px;
+  border: 3px solid white;
+  border-radius: 8px;
+  font-family: sans-serif;
+  font-size: 14px;
+  z-index: 100;
+  display: none;
+  width: 240px; /* narrower so slots fit */
+  text-align: center;
+}
+
+#chestSlots {
+  display: flex;              /* lay slots side by side */
+  justify-content: center;    /* center them */
+  gap: 10px;                  /* spacing between slots */
+  margin-top: 10px;
+}
+
+.chest-slot {
+  width: 60px;                /* same size as inventory slots */
+  height: 60px;
+  background-color: rgba(255,255,255,0.1);
+  border: 1px solid white;
+  position: relative;
+  cursor: pointer;
+}
+
+.chest-slot:hover {
+  background-color: rgba(255,255,255,0.3);
+}
+
+.chest-slot .item-icon {
+  width: 80%;
+  height: 80%;
+  margin: 10% auto;
+}
+
+.chest-slot .item-count {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 10px;
+  color: white;
+  text-shadow: 1px 1px 1px black;
+}
+
     .firepit {
   position: absolute;
   width: 40px;
