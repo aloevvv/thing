@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Adventuror</title>
+  <title>Procedural Room Game</title>
   <style>
     body {
       margin: 0;
@@ -80,15 +80,6 @@
   border: 2px solid #222;      
   box-sizing: border-box;
 }
-    .chest {
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  background-color: #a67c52;
-  border: 2px solid #5c3d1e;
-  box-sizing: border-box;
-}
-
     .firepit {
   position: absolute;
   width: 40px;
@@ -221,25 +212,6 @@
 </div>
     <div id="inventory"></div>
   </div>
-
-  <div id="chestPopup" style="
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: none;
-  background-color: rgba(0,0,0,0.7);
-  border: 2px solid white;
-  padding: 10px;
-  width: 200px;
-  display: flex;
-  justify-content: space-around;
-">
-  <div class="chest-slot" data-index="0"></div>
-  <div class="chest-slot" data-index="1"></div>
-  <div class="chest-slot" data-index="2"></div>
-</div>
-
   
   <div id="controlsPopup">
   <h2>Controls</h2>
@@ -311,7 +283,6 @@
     resourceConfig['w-pickaxe'] = { color: '#8b4513', type: 'tool', equip: 'pickaxe', harvestLevel: 1 };
     resourceConfig['furnace'] = { color: '#444', type: 'placeable' };
     resourceConfig['firepit'] = { color: '#444', type: 'placeable' };
-    resourceConfig['chest'] = { color: '#a67c52', type: 'placeable' };
     resourceConfig['stone-axe'] = { color: '#7f7f7f', type: 'tool', equip: 'pickaxe', harvestLevel: 2 };
     resourceConfig['stone-sword'] = { color: '#7f7f7f', type: 'weapon', equip: 'sword', damageBoost: 10 };
     resourceConfig['stone-helm'] = { color: '#7f7f7f', type: 'armor', equip: 'helmet', defense: 2 };
@@ -360,7 +331,6 @@ resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 
         'gold-axe': { costs: { tree: 50, gold: 40 }, requiresTable: true },
         'gold-sword': { costs: { tree: 50, rock: 40, gold: 50 }, requiresTable: true },
         'gold-helm': { costs: { rock: 50, gold: 60 }, requiresTable: true },
-        'chest': { costs: { tree : 75, gold: 10 }, requiresTable: true },
         'diamond-axe': { costs: { tree: 60, diamond: 50 }, requiresTable: true },
         'diamond-sword': { costs: { rock: 50, gold: 40, diamond: 60 }, requiresTable: true },
         'diamond-helmet': { costs: { rock: 60, gold: 50, diamond: 70 }, requiresTable: true },
@@ -616,18 +586,6 @@ function placeFirePit() {
   }, 3000); 
 }
 
-function placeChest() {
-  const currentRoomData = rooms[`${roomX},${roomY}`];
-  const chest = document.createElement("div");
-  chest.className = "chest";
-  chest.dataset.type = "chest";
-  chest.dataset.contents = JSON.stringify([null, null, null]); // 3 slots
-  chest.style.left = (boxX + GRID_SIZE) + "px";
-  chest.style.top = boxY + "px";
-
-  currentRoomData.obstacles.push(chest);
-  gameArea.appendChild(chest);
-}
 
     
     function isNearCraftingTable() {
@@ -674,49 +632,6 @@ function placeChest() {
   }
   return false;
 }
-    function nearChest() {
-  const obstacles = rooms[`${roomX},${roomY}`].obstacles || [];
-  for (const obs of obstacles) {
-    if (obs.dataset.type === "chest") {
-      const ox = parseInt(obs.style.left);
-      const oy = parseInt(obs.style.top);
-      if (Math.abs(boxX - ox) < GRID_SIZE * 2 && Math.abs(boxY - oy) < GRID_SIZE * 2) {
-        return obs;
-      }
-    }
-  }
-  return null;
-    }
-
-
-    function updateChestUI(chest) {
-  const contents = JSON.parse(chest.dataset.contents);
-  const slots = document.querySelectorAll("#chestPopup .chest-slot");
-
-  slots.forEach((slot, i) => {
-    slot.textContent = contents[i] ? contents[i] : "";
-    slot.onclick = () => {
-      if (contents[i]) {
-        // take item back
-        collectResource(contents[i], 1);
-        contents[i] = null;
-      } else {
-        // put first inventory item in
-        const invKeys = Object.keys(player.inventory);
-        if (invKeys.length > 0) {
-          const item = invKeys[0];
-          player.inventory[item]--;
-          if (player.inventory[item] <= 0) delete player.inventory[item];
-          contents[i] = item;
-        }
-      }
-      chest.dataset.contents = JSON.stringify(contents);
-      updateInventoryUI();
-      updateChestUI(chest);
-    };
-  });
-}
-
 
     function eatItem(itemType) {
         const config = resourceConfig[itemType];
@@ -1054,49 +969,37 @@ setInterval(() => {
 
 
     // Movement Handler - Added updateCraftingUI call here
-   
-   
+    document.addEventListener("keydown", (event) => {
+      let newX = boxX;
+      let newY = boxY;
+      let roomChanged = false;
 
-function updateChestPopup() {
-  const chest = nearChest();
-  const popup = document.getElementById("chestPopup");
+      if (event.key === "ArrowUp") newY -= step;
+      else if (event.key === "ArrowDown") newY += step;
+      else if (event.key === "ArrowLeft") newX -= step;
+      else if (event.key === "ArrowRight") newX += step;
+      else if (event.code !== "Space") return;
 
-  if (chest) {
-    popup.style.display = "flex";
-    updateChestUI(chest);
-  } else {
-    popup.style.display = "none";
-  }
+      if (newX < 0) { clearRoom(); roomX--; newX = gameArea.offsetWidth - 40; roomChanged = true; }
+      else if (newX > gameArea.offsetWidth - 40) { clearRoom(); roomX++; newX = 0; roomChanged = true; }
+      else if (newY < 0) { clearRoom(); roomY--; newY = gameArea.offsetHeight - 40; roomChanged = true; }
+      else if (newY > gameArea.offsetHeight - 40) { clearRoom(); roomY++; newY = 0; roomChanged = true; }
+
+      if (roomChanged) {
+  loadRoom(roomX, roomY);
+  updateCoordDisplay();
+  updateDayNightUI();
 }
 
-// Arrow‑key movement handler
-document.addEventListener("keydown", (event) => {
-  let newX = boxX;
-  let newY = boxY;
-  let roomChanged = false;
-
-  if (event.key === "ArrowUp") newY -= step;
-  else if (event.key === "ArrowDown") newY += step;
-  else if (event.key === "ArrowLeft") newX -= step;
-  else if (event.key === "ArrowRight") newX += step;
-  else if (event.code !== "Space") return;
-
-  // room change logic...
-  if (roomChanged) {
-    loadRoom(roomX, roomY);
-    updateCoordDisplay();
-    updateDayNightUI();
-  }
-
-  if (canMovePlayer(newX, newY)) {
-    boxX = newX;
-    boxY = newY;
-    box.style.left = boxX + "px";
-    box.style.top = boxY + "px";
-    updateCraftingUI();
-    updateChestPopup();
-  }
-});
+      if (canMovePlayer(newX, newY)) {
+        boxX = newX;
+        boxY = newY;
+        box.style.left = boxX + "px";
+        box.style.top = boxY + "px";
+        // CRITICAL: Update crafting UI as player position changes relative to crafting tables
+        updateCraftingUI(); 
+      }
+    });
     inventoryEl.addEventListener('contextmenu', (event) => {
   event.preventDefault(); // Prevent browser menu
   const clickedSlot = event.target.closest('.inv-slot');
