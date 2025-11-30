@@ -1007,10 +1007,13 @@ function placeChest() {
     const oy = parseInt(obs.style.top);
     const ow = parseInt(obs.style.width) || GRID_SIZE;
     const oh = parseInt(obs.style.height) || GRID_SIZE;
-
     if (x < ox + ow && x + GRID_SIZE > ox &&
         y < oy + oh && y + GRID_SIZE > oy) {
       if (obs.dataset.type === "wall") {
+        return true;
+      }
+      // Check if it's NOT a plot. Plots should be walkable.
+      if (obs.dataset.type !== "plot") { 
         return true;
       }
       if (obs.dataset.amount > 0) {
@@ -1020,6 +1023,7 @@ function placeChest() {
   }
   return false;
 }
+
 
 
     
