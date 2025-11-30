@@ -248,10 +248,13 @@
     const hungerFillEl = document.getElementById("hunger-fill");
     const hungerValueEl = document.getElementById("hunger-value");
     
-    // --- CONFIGS AND STATE (Same as before) ---
+    // --- CONFIGS AND STATE  ---
     const step = 20; 
     const INVENTORY_SIZE = 9; 
     const GRID_SIZE = 40;
+    let activeChest = null; 
+const chestPopup = document.getElementById("chestPopup");
+const chestSlotsEl = document.getElementById("chestSlots");
 
     let boxX = 280; 
     let boxY = 180; 
@@ -604,9 +607,6 @@ document.addEventListener("keydown", (event) => {
   updateCraftingUI();
 }
 
-    let activeChest = null; 
-const chestPopup = document.getElementById("chestPopup");
-const chestSlotsEl = document.getElementById("chestSlots");
     
     function placeCraftingTable(type) {
         // Find an empty spot near the player? For now, just add an obstacle to the current room data
