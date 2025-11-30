@@ -1049,7 +1049,7 @@ document.addEventListener("keydown", (event) => {
 });
   let canPunch = true;
         // Punch Mechanic Handler (Updated to check tool requirement)
-    document.addEventListener("keydown", (event) => {
+    document.addEventListener("keyup", (event) => {
   if (event.code === "Space" && canPunch) {
     canPunch = false; // lock until cooldown finishes
 
