@@ -670,7 +670,7 @@ function placeFirePit() {
     // --- Game World Generation/Persistence ---
     function placeObstacle(type, count, obstacles) {
   const cfg = resourceConfig[type];
-  const margin = 100; // minimum distance from edges
+  const margin = 35; // minimum distance from edges
 
   for (let i = 0; i < count; i++) {
     const obs = document.createElement("div");
