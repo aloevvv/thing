@@ -181,6 +181,9 @@
     .polarBear { background-color: white; }
     .penguin { background-color: black; }
     .dragon { background-color: '#0630be' }
+    .golem { background-color: '#0630be' }
+    .centipede { background-color: '#0630be' }
+    .scorpion { background-color: black }
 
     /* UI Overlay and Inventory styles remain the same */
     #uiContainer { display: flex; flex-direction: column; width: 600px; }
@@ -398,6 +401,8 @@ resourceConfig['plot'] = { color: '#654321', type: 'placeable' };
 resourceConfig['bread'] = { color: '#bc7f2e', type: 'food', foodValue: 30 };
 resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 };
 resourceConfig['feather'] = { color: '#e6d9c1', type: 'material' };
+resourceConfig['skin'] = { color: '#e6d9c1', type: 'material' }; //edit these two
+resourceConfig['poison'] = { color: '#e6d9c1', type: 'food' };
 resourceConfig['dragonheart'] = { color: '#223a8a', type: 'material' };
 
 
@@ -409,7 +414,10 @@ resourceConfig['dragonheart'] = { color: '#223a8a', type: 'material' };
         fox: { hp: 200, damage: 10, speed: 40, range: 300, drops: { meat: 1 }, spawnChance: 0.10 },
         polarBear: { hp: 500, damage: 25, speed: 30, range: 400, drops: { meat: 2, fur: 2 }, spawnChance: 0.10 },
         penguin: { hp: 175, damage: 0, speed: 50, range: 0, drops: { meat: 1, feather: 2 }, spawnChance: 0.15 },
-        dragon: { hp: 1000, damage: 40, speed: 30, range: 500, drops: { meat: 5, dragonheart: 1 }, spawnChance: 1.0 }
+        dragon: { hp: 1000, damage: 40, speed: 30, range: 500, drops: { meat: 5, dragonheart: 1 }, spawnChance: 1.0 },
+        golem: { hp: 1500, damage: 40, speed: 30, range: 500, drops: { stone: 5, crystal: 1 }, spawnChance: 0.05 },
+        scorpion: { hp: 500, damage: 20, speed: 40, range: 500, drops: { poison: 1 }, spawnChance: 0.10 },
+        centipede: { hp: 200, damage: 30, speed: 30, range: 500, drops: { meat: 1, skin: 2 }, spawnChance: 0.05 }
     };
 
     // Crafting Recipes
@@ -966,22 +974,75 @@ function placeChest(type) {
 
     function placeEnemies(enemies) {
   if (isTundra()) {
-  if (Math.random() < enemyConfig.polarBear.spawnChance) {
-    enemies.push(createEnemy('polarBear',
-      Math.random() * (gameArea.offsetWidth - GRID_SIZE),
-      Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
-  }
-  if (Math.random() < enemyConfig.penguin.spawnChance) {
-    enemies.push(createEnemy('penguin',
-      Math.random() * (gameArea.offsetWidth - GRID_SIZE),
-      Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
-  }
+    // tundra enemies
+    if (Math.random() < enemyConfig.polarBear.spawnChance) {
+      enemies.push(createEnemy(
+        'polarBear',
+        Math.random() * (gameArea.offsetWidth - GRID_SIZE),
+        Math.random() * (gameArea.offsetHeight - GRID_SIZE)
+      ));
+    }
+    if (Math.random() < enemyConfig.penguin.spawnChance) {
+      enemies.push(createEnemy(
+        'penguin',
+        Math.random() * (gameArea.offsetWidth - GRID_SIZE),
+        Math.random() * (gameArea.offsetHeight - GRID_SIZE)
+      ));
+    }
+  } else if (isDesert()) {
+    // desert enemies
+    if (Math.random() < enemyConfig.scorpion.spawnChance) {
+      enemies.push(createEnemy(
+        'scorpion',
+        Math.random() * (gameArea.offsetWidth - GRID_SIZE),
+        Math.random() * (gameArea.offsetHeight - GRID_SIZE)
+      ));
+    }
+    if (Math.random() < enemyConfig.golem.spawnChance) {
+      enemies.push(createEnemy(
+        'golem',
+        Math.random() * (gameArea.offsetWidth - GRID_SIZE),
+        Math.random() * (gameArea.offsetHeight - GRID_SIZE)
+      ));
+    }
+    if (Math.random() < enemyConfig.centipede.spawnChance) {
+      // centipede made of 4 segments in a line
+      const startX = Math.random() * (gameArea.offsetWidth - GRID_SIZE * 4);
+      const startY = Math.random() * (gameArea.offsetHeight - GRID_SIZE);
+      for (let i = 0; i < 4; i++) {
+        enemies.push(createEnemy(
+          'centipede-segment',
+          startX + i * GRID_SIZE,
+          startY
+        ));
+      }
+    }
   } else {
-        if (Math.random() < enemyConfig.wolf.spawnChance) enemies.push(createEnemy('wolf', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
-        if (Math.random() < enemyConfig.bear.spawnChance) enemies.push(createEnemy('bear', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
-        if (Math.random() < enemyConfig.fox.spawnChance) enemies.push(createEnemy('fox', Math.random() * (gameArea.offsetWidth - GRID_SIZE), Math.random() * (gameArea.offsetHeight - GRID_SIZE)));
+    // forest/default enemies
+    if (Math.random() < enemyConfig.wolf.spawnChance) {
+      enemies.push(createEnemy(
+        'wolf',
+        Math.random() * (gameArea.offsetWidth - GRID_SIZE),
+        Math.random() * (gameArea.offsetHeight - GRID_SIZE)
+      ));
     }
+    if (Math.random() < enemyConfig.bear.spawnChance) {
+      enemies.push(createEnemy(
+        'bear',
+        Math.random() * (gameArea.offsetWidth - GRID_SIZE),
+        Math.random() * (gameArea.offsetHeight - GRID_SIZE)
+      ));
     }
+    if (Math.random() < enemyConfig.fox.spawnChance) {
+      enemies.push(createEnemy(
+        'fox',
+        Math.random() * (gameArea.offsetWidth - GRID_SIZE),
+        Math.random() * (gameArea.offsetHeight - GRID_SIZE)
+      ));
+    }
+  }
+}
+
     
     function generateRoom(rx, ry) {
   const key = `${rx},${ry}`;
@@ -1124,6 +1185,26 @@ function placeChest(type) {
     function updateCoordDisplay() {
   document.getElementById("coordDisplay").textContent = `${roomX},${roomY}`;
 }
+
+    function startCentipedeMovement(segments) {
+  setInterval(() => {
+    if (segments.length === 0) return;
+
+    // move head randomly
+    const head = segments[0];
+    const dx = (Math.random() < 0.5 ? -1 : 1) * GRID_SIZE;
+    const dy = (Math.random() < 0.5 ? -1 : 1) * GRID_SIZE;
+    head.style.left = Math.max(0, Math.min(gameArea.offsetWidth - GRID_SIZE, head.offsetLeft + dx)) + "px";
+    head.style.top = Math.max(0, Math.min(gameArea.offsetHeight - GRID_SIZE, head.offsetTop + dy)) + "px";
+
+    // body follows
+    for (let i = segments.length - 1; i > 0; i--) {
+      segments[i].style.left = segments[i - 1].offsetLeft + "px";
+      segments[i].style.top = segments[i - 1].offsetTop + "px";
+    }
+  }, 400);
+}
+
 
     function movePenguin(enemyEl) {
   const directions = ['up','down','left','right'];
