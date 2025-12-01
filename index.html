@@ -567,10 +567,10 @@ resourceConfig['dragonheart'] = { color: '#223a8a', type: 'material' };
       toggleEquip(itemType, config.equip);
     } else if (config.type === 'placeable') {
       if (itemType === 'craftingtable') placeCraftingTable(itemType);
-      else if (itemType === 'plot') placePlot();
+      else if (itemType === 'plot') placePlot(itemType);
       else if (itemType === 'furnace') placeFurnace(itemType);
-      else if (itemType === 'firepit') placeFirePit();
-      else if (itemType === 'chest') placeChest();
+      else if (itemType === 'firepit') placeFirePit(itemType);
+      else if (itemType === 'chest') placeChest(itemType);
     }
   }
 });
