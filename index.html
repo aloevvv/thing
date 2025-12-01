@@ -177,6 +177,7 @@
     .fox { background-color: orange; }
     .polarBear { background-color: white; }
     .penguin { background-color: black; }
+    .dragon { background-color: '#0630be' }
 
     /* UI Overlay and Inventory styles remain the same */
     #uiContainer { display: flex; flex-direction: column; width: 600px; }
@@ -355,6 +356,7 @@ const chestSlotsEl = document.getElementById("chestSlots");
     // Add new items and their colors
     resourceConfig['meat'] = { color: 'pink', type: 'food', foodValue: 20 };
     resourceConfig['fur'] = { color: 'white', type: 'material' };
+    resourceConfig['paper'] = { color: '#ececec', type: 'material' };
     resourceConfig['w-pickaxe'] = { color: '#8b4513', type: 'tool', equip: 'pickaxe' }; 
     resourceConfig['w-helm'] = { color: '#8b4513', type: 'armor', equip: 'helmet', defense: 1 };
     resourceConfig['w-sword'] = { color: '#8b4513', type: 'weapon', equip: 'sword', damageBoost: 5 };
@@ -387,6 +389,7 @@ resourceConfig['plot'] = { color: '#654321', type: 'placeable' };
 resourceConfig['bread'] = { color: '#bc7f2e', type: 'food', foodValue: 30 };
 resourceConfig['cooked-meat'] = { color: '#6b1616', type: 'food', foodValue: 25 };
 resourceConfig['feather'] = { color: '#e6d9c1', type: 'material' };
+resourceConfig['dragonheart'] = { color: '#223a8a', type: 'material' };
 
 
 
@@ -396,7 +399,8 @@ resourceConfig['feather'] = { color: '#e6d9c1', type: 'material' };
         bear: { hp: 350, damage: 20, speed: 15, range: 300, drops: { meat: 2, fur: 1 }, spawnChance: 0.10 },
         fox: { hp: 200, damage: 10, speed: 40, range: 300, drops: { meat: 1 }, spawnChance: 0.10 },
         polarBear: { hp: 500, damage: 25, speed: 30, range: 400, drops: { meat: 2, fur: 2 }, spawnChance: 0.10 },
-        penguin: { hp: 175, damage: 0, speed: 50, range: 0, drops: { meat: 1, feather: 2 }, spawnChance: 0.15 }
+        penguin: { hp: 175, damage: 0, speed: 50, range: 0, drops: { meat: 1, feather: 2 }, spawnChance: 0.15 },
+        dragon: { hp: 1000, damage: 40, speed: 30, range: 500, drops: { meat: 5, dragonheart: 1 }, spawnChance: 1.0 }
     };
 
     // Crafting Recipes
@@ -423,6 +427,7 @@ resourceConfig['feather'] = { color: '#e6d9c1', type: 'material' };
         'plot': { costs: { tree: 20, dirt: 60 }, requiresTable: true },
         'bread': { costs: { wheat: 3 }, requiresFurnace: true },
         'cooked-meat': { costs: { meat: 1 }, requiresFurnace: true },
+        'paper': { costs: { tree: 15 }, requiresFurnace: true },
     };
 
     // --- UI Update Functions ---
@@ -959,6 +964,15 @@ function placeChest() {
 
   if (isDeepTundra()) {
     placeBottomWall(roomData.obstacles);
+  }
+      if (rx === 0 && ry === 50) {
+    const dragon = createEnemy(
+      "dragon",
+      gameArea.offsetWidth / 2 - GRID_SIZE / 2,
+      gameArea.offsetHeight / 2 - GRID_SIZE / 2
+    );
+    roomData.enemies.push(dragon);
+    gameArea.appendChild(dragon);
   }
 
   rooms[key] = roomData;
