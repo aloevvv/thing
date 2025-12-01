@@ -186,6 +186,7 @@
     .status-bar-label { position: absolute; top: 0; left: 0; width: 100%; text-align: center; line-height: 20px; font-size: 12px; text-shadow: 1px 1px 1px black; }
     #hp-fill { background-color: red; }
     #hunger-fill { background-color: orange; }
+    #temp-fill { background-color: '#a5baff'; }
     #inventory { display: grid; grid-template-columns: repeat(9, 60px); gap: 5px; width: 600px; height: 60px; background-color: rgba(0, 0, 0, 0.5); padding: 5px; border: 2px solid white; }
     .inv-slot { width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.1); border: 1px solid white; position: relative; cursor: pointer; }
     .inv-slot:hover { background-color: rgba(255, 255, 255, 0.3); }
@@ -327,6 +328,7 @@ const chestSlotsEl = document.getElementById("chestSlots");
     let roomY = 0; 
     const rooms = {}; 
     let lastHitTime = 0;
+    let tempMaxStart = null;
 
     const player = {
   hp: 100,
@@ -383,6 +385,7 @@ const chestSlotsEl = document.getElementById("chestSlots");
 };
 resourceConfig['wheat-seed'] = { color: 'yellow', type: 'material' };
 resourceConfig['dirt'] = { color: '#794f4f', type: 'material' };
+resourceConfig['ice'] = { color: '#a3d9ff', type: 'food' };
 resourceConfig['wheat'] = { color: 'goldenrod', type: 'material' };
 resourceConfig['backpack'] = { color: '#853c16', type: 'material' };
 resourceConfig['plot'] = { color: '#654321', type: 'placeable' };
@@ -836,16 +839,28 @@ function placeChest() {
 }
 
     function eatItem(itemType) {
-        const config = resourceConfig[itemType];
-        if (config && config.type === 'food' && player.inventory[itemType] > 0) {
-            player.inventory[itemType]--;
-            player.hunger += config.foodValue;
-            if (player.hunger > player.maxHunger) player.hunger = player.maxHunger;
-            if (player.inventory[itemType] <= 0) delete player.inventory[itemType];
-            updateHungerUI();
-            updateInventoryUI();
-        }
+  const config = resourceConfig[itemType];
+  if (config && config.type === 'food' && player.inventory[itemType] > 0) {
+    player.inventory[itemType]--;
+
+    if (itemType === 'ice') {
+      player.temp -= 5;
+      if (player.temp < 0) player.temp = 0;
+      updateTempUI();
+    } else {
+      player.hunger += config.foodValue;
+      if (player.hunger > player.maxHunger) player.hunger = player.maxHunger;
+      updateHungerUI();
     }
+
+    if (player.inventory[itemType] <= 0) {
+      delete player.inventory[itemType];
+    }
+
+    updateInventoryUI();
+  }
+}
+
     
    function collectResource(type, amount) {
   // If resource already exists, just add
@@ -1176,6 +1191,16 @@ if (!nearFirePit()) {
     damagePlayer(10);
     player.temp = 0;
   }
+  
+  if (player.temp >= player.maxTemp) {
+    if (!tempMaxStart) tempMaxStart = Date.now();
+    const elapsed = Date.now() - tempMaxStart;
+    if (elapsed >= 10000) {
+      damagePlayer(10);  
+    }
+  } else {
+    tempMaxStart = null; // reset if temp drops
+  }
 
   updateTempUI();
 }, 3000);
@@ -1500,16 +1525,26 @@ document.addEventListener("keydown", (event) => {
         }
 
 if (player.equipped.pickaxe === 'shovel') {
-  // Always collect dirt
-  collectResource('dirt', 1);
+  if (isTundra()) {
+    collectResource('ice', 1);
 
-  // 2% chance for wheat seed
-  if (Math.random() < 0.02) {
-    collectResource('wheat-seed', 1);
-    logMessage("You found a wheat seed!");
+    if (Math.random() < 0.01) {
+      collectResource('diamond', 1);
+      logMessage("You found a diamond in the ice!");
+    }
+  } else {
+    collectResource('dirt', 1);
+
+    // 2% chance for wheat seed
+    if (Math.random() < 0.02) {
+      collectResource('wheat-seed', 1);
+      logMessage("You found a wheat seed!");
+    }
   }
+
   hitSomething = true; // counts as an action
 }
+
 
         if (!hitSomething) {
             // Check enemies (same as before)
