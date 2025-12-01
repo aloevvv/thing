@@ -879,12 +879,19 @@ function placeChest(type) {
 
     if (itemType === 'ice') {
       player.temp -= 5;
-      if (player.temp < 0) player.temp = 0;
-      updateTempUI();
+    }
+
+    if (itemType === 'poison') {
+    
+      player.hp -= 5;
+      if (player.hp < 0) player.hp = 0;
+      updateHPUI();
     } else {
-      player.hunger += config.foodValue;
-      if (player.hunger > player.maxHunger) player.hunger = player.maxHunger;
-      updateHungerUI();
+    
+      if (config.foodValue) {
+        player.hunger = Math.min(player.maxHunger, player.hunger + config.foodValue);
+        updateHungerUI();
+      }
     }
 
     if (player.inventory[itemType] <= 0) {
@@ -894,6 +901,7 @@ function placeChest(type) {
     updateInventoryUI();
   }
 }
+
 
     
    function collectResource(type, amount) {
