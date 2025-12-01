@@ -869,7 +869,7 @@ function placeChest() {
     // --- Game World Generation/Persistence ---
     function placeObstacle(type, count, obstacles) {
   const cfg = resourceConfig[type];
-  const margin = 10; // minimum distance from edges
+  const margin = 40; // minimum distance from edges
 
   for (let i = 0; i < count; i++) {
     const obs = document.createElement("div");
