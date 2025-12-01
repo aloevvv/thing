@@ -186,7 +186,7 @@
     .status-bar-label { position: absolute; top: 0; left: 0; width: 100%; text-align: center; line-height: 20px; font-size: 12px; text-shadow: 1px 1px 1px black; }
     #hp-fill { background-color: red; }
     #hunger-fill { background-color: orange; }
-    #temp-fill { background-color: #a5baff; }
+    #temp-fill { background-color: '#a5baff'; }
     #inventory { display: grid; grid-template-columns: repeat(9, 60px); gap: 5px; width: 600px; height: 60px; background-color: rgba(0, 0, 0, 0.5); padding: 5px; border: 2px solid white; }
     .inv-slot { width: 100%; height: 100%; background-color: rgba(255, 255, 255, 0.1); border: 1px solid white; position: relative; cursor: pointer; }
     .inv-slot:hover { background-color: rgba(255, 255, 255, 0.3); }
@@ -1167,9 +1167,12 @@ function updateDayNightUI() {
 
 
     function updateTempUI() {
-  document.getElementById("temp-value").textContent = player.temp;
+  const tempFillEl = document.getElementById("temp-fill");
+  const tempValueEl = document.getElementById("temp-value");
+  
+  tempValueEl.textContent = player.temp;
   const percent = (player.temp / player.maxTemp) * 100;
-  document.getElementById("temp-fill").style.width = percent + "%";
+  tempFillEl.style.width = percent + "%";
 }
 
 
