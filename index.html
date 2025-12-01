@@ -562,10 +562,15 @@ resourceConfig['dragonheart'] = { color: '#223a8a', type: 'material' };
             const config = resourceConfig[itemType];
 
             if (config.type === 'food') {
-                eatItem(itemType);
-            } else if (config.equip) {
-                toggleEquip(itemType, config.equip);
-            }
+      eatItem(itemType);
+    } else if (config.equip) {
+      toggleEquip(itemType, config.equip);
+    } else if (config.type === 'placeable') {
+      if (itemType === 'craftingtable') placeCraftingTable(itemType);
+      else if (itemType === 'plot') placePlot();
+      else if (itemType === 'furnace') placeFurnace(itemType);
+      else if (itemType === 'firepit') placeFirePit();
+      else if (itemType === 'chest') placeChest();
         }
     });
     chestSlotsEl.addEventListener('click', (event) => {
@@ -663,20 +668,10 @@ document.addEventListener("keydown", (event) => {
     if (player.inventory[resource] <= 0) delete player.inventory[resource];
   }
 
-  // Special case: backpack upgrade
+ 
   if (itemType === 'backpack') {
     player.backpackUpgrade = true;
     console.log("Backpack crafted! Inventory expanded by 4 slots.");
-  } else if (itemType === 'furnace') {
-    placeFurnace(itemType);
-  } else if (itemType === 'plot') {
-    placePlot();
-  } else if (itemType === 'firepit') {
-    placeFirePit();
-  } else if (itemType === 'chest') {
-    placeChest();
-  } else if (resourceConfig[itemType].type === 'placeable') {
-    placeCraftingTable(itemType);
   } else {
     collectResource(itemType, 1);
   }
@@ -684,6 +679,7 @@ document.addEventListener("keydown", (event) => {
   updateInventoryUI();
   updateCraftingUI();
 }
+
 
     
     function placeCraftingTable(type) {
