@@ -989,24 +989,62 @@ function placeChest(type) {
 
   const roomData = { obstacles: [], enemies: [], intervals: [] };
 
-  placeObstacle("tree", Math.floor(Math.random() * 3) + 2, roomData.obstacles);
-  placeObstacle("rock", Math.floor(Math.random() * 2) + 1, roomData.obstacles);
-  if (Math.random() < 0.25) placeObstacle("gold", 1, roomData.obstacles);
+  // Desert biome
+  if (isDesert()) {
+    // 2–4 rocks guaranteed
+    const stoneCount = Math.floor(Math.random() * 3) + 2;
+    placeObstacle("rock", stoneCount, roomData.obstacles);
 
-  if (isTundra()) {
-    if (Math.random() < 0.25) placeObstacle("diamond", 1, roomData.obstacles);
-    if (Math.random() < 0.07) placeObstacle("crystal", 1, roomData.obstacles);
-  } else {
-    if (Math.random() < 0.05) placeObstacle("diamond", 1, roomData.obstacles); 
+    // Gold: 20% chance
+    if (Math.random() < 0.20) {
+      placeObstacle("gold", 1, roomData.obstacles);
+    }
+
+    // Diamond: 5% chance
+    if (Math.random() < 0.05) {
+      placeObstacle("diamond", 1, roomData.obstacles);
+    }
+
+    // Emerald: 3% chance
+    if (Math.random() < 0.03) {
+      placeObstacle("emerald", 1, roomData.obstacles);
+    }
+
+    // No trees or berry bushes in desert
   }
 
-  placeObstacle("berrybush", Math.floor(Math.random() * 3) + 1, roomData.obstacles);
+  // Tundra biome
+  else if (isTundra()) {
+    placeObstacle("tree", Math.floor(Math.random() * 2), roomData.obstacles); // sparse trees
+    placeObstacle("rock", Math.floor(Math.random() * 2) + 1, roomData.obstacles);
+
+    if (Math.random() < 0.25) placeObstacle("diamond", 1, roomData.obstacles);
+    if (Math.random() < 0.07) placeObstacle("crystal", 1, roomData.obstacles);
+
+    placeObstacle("berrybush", Math.floor(Math.random() * 2), roomData.obstacles);
+  }
+
+  // Forest / default biome
+  else {
+    placeObstacle("tree", Math.floor(Math.random() * 3) + 2, roomData.obstacles);
+    placeObstacle("rock", Math.floor(Math.random() * 2) + 1, roomData.obstacles);
+
+    if (Math.random() < 0.25) placeObstacle("gold", 1, roomData.obstacles);
+    if (Math.random() < 0.05) placeObstacle("diamond", 1, roomData.obstacles);
+
+    placeObstacle("berrybush", Math.floor(Math.random() * 3) + 1, roomData.obstacles);
+  }
+
+  // Enemies
   placeEnemies(roomData.enemies);
 
+  // Deep tundra wall
   if (isDeepTundra()) {
     placeBottomWall(roomData.obstacles);
   }
-      if (rx === 0 && ry === 50) {
+
+  // Dragon boss at (0,50)
+  if (rx === 0 && ry === 50) {
     const dragon = createEnemy(
       "dragon",
       gameArea.offsetWidth / 2 - GRID_SIZE / 2,
@@ -1019,6 +1057,7 @@ function placeChest(type) {
   rooms[key] = roomData;
   return roomData;
 }
+
 
     function clearRoom() {
       const key = `${roomX},${roomY}`;
