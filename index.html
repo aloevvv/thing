@@ -556,12 +556,12 @@ resourceConfig['dragonheart'] = { color: '#223a8a', type: 'material' };
 
     // Eating/Equipping logic on inventory click
     inventoryEl.addEventListener('click', (event) => {
-        const clickedSlot = event.target.closest('.inv-slot');
-        if (clickedSlot && clickedSlot.dataset.type) {
-            const itemType = clickedSlot.dataset.type;
-            const config = resourceConfig[itemType];
+  const clickedSlot = event.target.closest('.inv-slot');
+  if (clickedSlot && clickedSlot.dataset.type) {
+    const itemType = clickedSlot.dataset.type;
+    const config = resourceConfig[itemType];
 
-            if (config.type === 'food') {
+    if (config.type === 'food') {
       eatItem(itemType);
     } else if (config.equip) {
       toggleEquip(itemType, config.equip);
@@ -571,8 +571,9 @@ resourceConfig['dragonheart'] = { color: '#223a8a', type: 'material' };
       else if (itemType === 'furnace') placeFurnace(itemType);
       else if (itemType === 'firepit') placeFirePit();
       else if (itemType === 'chest') placeChest();
-        }
-    });
+    }
+  }
+});
     chestSlotsEl.addEventListener('click', (event) => {
   const clickedSlot = event.target.closest('.chest-slot');
   if (clickedSlot) {
