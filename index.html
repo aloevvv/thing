@@ -701,7 +701,7 @@ document.addEventListener("keydown", (event) => {
         gameArea.appendChild(newTable);
         // Note: placed objects currently don't have regen intervals/datasets, they are permanent once placed.
     }
-    function placePlot() {
+    function placePlot(type) {
       if (player.inventory[type] > 0) {
     player.inventory[type]--;
     if (player.inventory[type] <= 0) delete player.inventory[type];
@@ -733,7 +733,7 @@ function placeFurnace(type) {
   currentRoomData.obstacles.push(furnace);
   gameArea.appendChild(furnace);
 }
-function placeFirePit() {
+function placeFirePit(type) {
   if (player.inventory[type] > 0) {
     player.inventory[type]--;
     if (player.inventory[type] <= 0) delete player.inventory[type];
@@ -774,7 +774,7 @@ function placeFirePit() {
   }, 3000); 
 }
 
-function placeChest() {
+function placeChest(type) {
   if (player.inventory[type] > 0) {
     player.inventory[type]--;
     if (player.inventory[type] <= 0) delete player.inventory[type];
