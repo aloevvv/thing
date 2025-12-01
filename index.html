@@ -684,8 +684,11 @@ document.addEventListener("keydown", (event) => {
 
     
     function placeCraftingTable(type) {
-        // Find an empty spot near the player? For now, just add an obstacle to the current room data
-        // This is a simple implementation for now.
+        if (player.inventory[type] > 0) {
+    player.inventory[type]--;
+    if (player.inventory[type] <= 0) delete player.inventory[type];
+    updateInventoryUI();
+  }
         const currentRoomData = rooms[`${roomX},${roomY}`];
         const newTable = document.createElement("div");
         newTable.className = type;
@@ -699,6 +702,11 @@ document.addEventListener("keydown", (event) => {
         // Note: placed objects currently don't have regen intervals/datasets, they are permanent once placed.
     }
     function placePlot() {
+      if (player.inventory[type] > 0) {
+    player.inventory[type]--;
+    if (player.inventory[type] <= 0) delete player.inventory[type];
+    updateInventoryUI();
+  }
   const currentRoomData = rooms[`${roomX},${roomY}`];
   const plot = document.createElement("div");
   plot.className = "plot";
@@ -711,6 +719,11 @@ document.addEventListener("keydown", (event) => {
 }
 
 function placeFurnace(type) {
+  if (player.inventory[type] > 0) {
+    player.inventory[type]--;
+    if (player.inventory[type] <= 0) delete player.inventory[type];
+    updateInventoryUI();
+  }
   const currentRoomData = rooms[`${roomX},${roomY}`];
   const furnace = document.createElement("div");
   furnace.className = type;
@@ -721,6 +734,11 @@ function placeFurnace(type) {
   gameArea.appendChild(furnace);
 }
 function placeFirePit() {
+  if (player.inventory[type] > 0) {
+    player.inventory[type]--;
+    if (player.inventory[type] <= 0) delete player.inventory[type];
+    updateInventoryUI();
+  }
   const currentRoomData = rooms[`${roomX},${roomY}`];
   const pit = document.createElement("div");
   pit.className = "firepit";
@@ -757,6 +775,11 @@ function placeFirePit() {
 }
 
 function placeChest() {
+  if (player.inventory[type] > 0) {
+    player.inventory[type]--;
+    if (player.inventory[type] <= 0) delete player.inventory[type];
+    updateInventoryUI();
+  }
   const currentRoomData = rooms[`${roomX},${roomY}`];
   const chest = document.createElement("div");
   chest.className = "chest";
