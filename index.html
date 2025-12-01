@@ -1198,20 +1198,38 @@ function placeChest(type) {
   setInterval(() => {
     if (segments.length === 0) return;
 
-    // move head randomly
     const head = segments[0];
+
     const dx = (Math.random() < 0.5 ? -1 : 1) * GRID_SIZE;
     const dy = (Math.random() < 0.5 ? -1 : 1) * GRID_SIZE;
-    head.style.left = Math.max(0, Math.min(gameArea.offsetWidth - GRID_SIZE, head.offsetLeft + dx)) + "px";
-    head.style.top = Math.max(0, Math.min(gameArea.offsetHeight - GRID_SIZE, head.offsetTop + dy)) + "px";
+    const newX = head.offsetLeft + dx;
+    const newY = head.offsetTop + dy;
 
-    // body follows
-    for (let i = segments.length - 1; i > 0; i--) {
-      segments[i].style.left = segments[i - 1].offsetLeft + "px";
-      segments[i].style.top = segments[i - 1].offsetTop + "px";
+
+    let collision = false;
+    for (let i = 1; i < segments.length; i++) {
+      if (segments[i].offsetLeft === newX && segments[i].offsetTop === newY) {
+        collision = true;
+        break;
+      }
     }
+
+   
+    if (!collision &&
+        newX >= 0 && newX <= gameArea.offsetWidth - GRID_SIZE &&
+        newY >= 0 && newY <= gameArea.offsetHeight - GRID_SIZE) {
+   
+      for (let i = segments.length - 1; i > 0; i--) {
+        segments[i].style.left = segments[i - 1].offsetLeft + "px";
+        segments[i].style.top = segments[i - 1].offsetTop + "px";
+      }
+      head.style.left = newX + "px";
+      head.style.top = newY + "px";
+    }
+ 
   }, 400);
 }
+
 
 
     function movePenguin(enemyEl) {
