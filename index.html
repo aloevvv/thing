@@ -372,7 +372,7 @@ const chestSlotsEl = document.getElementById("chestSlots");
     resourceConfig['gold-pickaxe'] = { color: 'gold', type: 'tool', equip: 'pickaxe', harvestLevel: 3 };
     resourceConfig['gold-sword'] = { color: 'gold', type: 'weapon', equip: 'sword', damageBoost: 15 };
     resourceConfig['gold-helm'] = { color: 'gold', type: 'armor', equip: 'helmet', defense: 3 };
-    resourceConfig['feather-coat'] = { color: 'white', type: 'armor', equip: 'helmet', defense: 0, warmthProfile: { normalDay: 0, normalNight: 10, tundraDay: 10, tundraNight: 30 } };
+    resourceConfig['feather-coat'] = { color: 'white', type: 'armor', equip: 'helmet', defense: 0, warmthProfile: { normalDay: 0, normalNight: 10, tundraDay: 10, tundraNight: 30, desertDay: -20, desertNight: 10 } };
     resourceConfig['diamond-pickaxe'] = { color: 'cyan', type: 'tool', equip: 'pickaxe', harvestLevel: 4 };
     resourceConfig['diamond-sword'] = { color: 'cyan', type: 'weapon', equip: 'sword', damageBoost: 20 };
     resourceConfig['diamond-helm'] = { color: 'cyan', type: 'armor', equip: 'helmet', defense: 4 };
@@ -1131,6 +1131,9 @@ let cycleTimer = 0;
     function isDeepTundra() {
   return isTundra() && roomY >= 50;
 }
+    function isDesert() {
+  return roomX >= 40 && roomY < 30; 
+}
 
 
 
@@ -1156,14 +1159,21 @@ function startDayNightCycle() {
 function updateDayNightUI() {
   if (isTundra()) {
     if (roomY >= 50) {
+      // Deep tundra
       document.body.style.backgroundColor = isDay ? "#56606b" : "#292c65";
     } else {
-      document.body.style.backgroundColor = isDay ? "#c8e3ff" : "#7c8fc4"; // tundra colors
+      // Normal tundra
+      document.body.style.backgroundColor = isDay ? "#c8e3ff" : "#7c8fc4";
     }
+  } else if (isDesert()) {
+    // Desert colors
+    document.body.style.backgroundColor = isDay ? "#e3d382" : "#5a4a2f";
   } else {
-    document.body.style.backgroundColor = isDay ? "darkgreen" : "#004026"; // forest colors
+    // Forest colors
+    document.body.style.backgroundColor = isDay ? "darkgreen" : "#004026";
   }
 }
+
 
 
     function updateTempUI() {
@@ -1180,6 +1190,8 @@ setInterval(() => {
   let loss;
 if (isTundra()) {
   loss = isDay ? 25 : 50; // tundra harsher
+  } else if (isDesert()) {
+  loss = isDay ? -10 : 30;
 } else {
   loss = isDay ? 2 : 30;  // normal biome
 }
@@ -1189,12 +1201,15 @@ const equipped = player.equipped.helmet;
 if (equipped && resourceConfig[equipped]) {
   const item = resourceConfig[equipped];
   if (item.warmthProfile) {
-    // Override with clothing-specific rules
-    if (isTundra()) {
-      loss = isDay ? item.warmthProfile.tundraDay : item.warmthProfile.tundraNight;
-    } else {
-      loss = isDay ? item.warmthProfile.normalDay : item.warmthProfile.normalNight;
-    }
+  if (isTundra()) {
+    loss = isDay ? item.warmthProfile.tundraDay : item.warmthProfile.tundraNight;
+  } else if (isDesert()) {
+    loss = isDay ? item.warmthProfile.desertDay : item.warmthProfile.desertNight;
+  } else {
+    loss = isDay ? item.warmthProfile.normalDay : item.warmthProfile.normalNight;
+  }
+}
+
   } else if (item.warmth) {
     // Fallback: subtract warmth value if defined
     loss -= item.warmth;
