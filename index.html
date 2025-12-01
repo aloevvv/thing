@@ -1176,7 +1176,7 @@ function updateDayNightUI() {
 
 
 
-    function updateTempUI() {
+   function updateTempUI() {
   const tempFillEl = document.getElementById("temp-fill");
   const tempValueEl = document.getElementById("temp-value");
   
@@ -1185,46 +1185,46 @@ function updateDayNightUI() {
   tempFillEl.style.width = percent + "%";
 }
 
-
 setInterval(() => {
   let loss;
-if (isTundra()) {
-  loss = isDay ? 25 : 50; // tundra harsher
-  } else if (isDesert()) {
-  loss = isDay ? -10 : 30;
-} else {
-  loss = isDay ? 2 : 30;  // normal biome
-}
 
-
-const equipped = player.equipped.helmet;
-if (equipped && resourceConfig[equipped]) {
-  const item = resourceConfig[equipped];
-  if (item.warmthProfile) {
+  // Base biome effects
   if (isTundra()) {
-    loss = isDay ? item.warmthProfile.tundraDay : item.warmthProfile.tundraNight;
+    loss = isDay ? 25 : 50; // tundra harsher
   } else if (isDesert()) {
-    loss = isDay ? item.warmthProfile.desertDay : item.warmthProfile.desertNight;
+    loss = isDay ? -10 : 30; // desert heats by day, cools by night
   } else {
-    loss = isDay ? item.warmthProfile.normalDay : item.warmthProfile.normalNight;
+    loss = isDay ? 2 : 30;   // forest/other
   }
-}
 
-  } else if (item.warmth) {
-    // Fallback: subtract warmth value if defined
-    loss -= item.warmth;
-    if (loss < 0) loss = 0;
+  // Clothing overrides
+  const equipped = player.equipped.helmet;
+  if (equipped && resourceConfig[equipped]) {
+    const item = resourceConfig[equipped];
+    if (item.warmthProfile) {
+      if (isTundra()) {
+        loss = isDay ? item.warmthProfile.tundraDay : item.warmthProfile.tundraNight;
+      } else if (isDesert()) {
+        loss = isDay ? item.warmthProfile.desertDay : item.warmthProfile.desertNight;
+      } else {
+        loss = isDay ? item.warmthProfile.normalDay : item.warmthProfile.normalNight;
+      }
+    } else if (item.warmth) {
+      // Fallback: subtract warmth value if defined
+      loss -= item.warmth;
+      if (loss < 0) loss = 0;
+    }
   }
-}
 
-if (!nearFirePit()) {
-  player.temp -= loss;
-} else {
-  player.temp += 20;
-  if (player.temp > player.maxTemp) player.temp = player.maxTemp;
-}
+  // Firepit effect
+  if (!nearFirePit()) {
+    player.temp -= loss;
+  } else {
+    player.temp += 20;
+    if (player.temp > player.maxTemp) player.temp = player.maxTemp;
+  }
 
-
+  // Damage checks
   if (player.temp <= 0) {
     damagePlayer(10);
     player.temp = 0;
@@ -1242,6 +1242,7 @@ if (!nearFirePit()) {
 
   updateTempUI();
 }, 3000);
+
 
 
 
