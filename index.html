@@ -1079,12 +1079,11 @@ function placeChest(type) {
       placeObstacle("emerald", 1, roomData.obstacles);
     }
 
-    // No trees or berry bushes in desert
   }
 
   // Tundra biome
   else if (isTundra()) {
-    placeObstacle("tree", Math.floor(Math.random() * 2), roomData.obstacles); // sparse trees
+    placeObstacle("tree", Math.floor(Math.random() * 2),+ 2, roomData.obstacles);
     placeObstacle("rock", Math.floor(Math.random() * 2) + 1, roomData.obstacles);
 
     if (Math.random() < 0.25) placeObstacle("diamond", 1, roomData.obstacles);
